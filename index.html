@@ -6,8 +6,8 @@
     <title>Maquetador Mausritter y Creador de Aventuras</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Google Fonts (Añadida UnifrakturMaguntia para Old-English) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-serif { font-family: 'Merriweather', serif; }
@@ -103,7 +103,7 @@
         </div>
         
         <div class="p-4 border-t border-slate-200 bg-white">
-            <button id="exportMapBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm">
+            <button id="exportMapBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm mb-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 Descargar Imagen del Mapa
             </button>
@@ -250,6 +250,7 @@
                     <select id="pdfFontSelect" class="p-1 border border-slate-300 rounded outline-none focus:border-emerald-500 bg-slate-50">
                         <option value="font-family: 'Merriweather', serif;" data-text="font-family: 'Inter', sans-serif;">Clásica (Merriweather)</option>
                         <option value="font-family: 'Crimson Text', serif;" data-text="font-family: 'Crimson Text', serif;">Antigua (Crimson Text)</option>
+                        <option value="font-family: 'UnifrakturMaguntia', serif;" data-text="font-family: 'UnifrakturMaguntia', serif;">Gótica / Old-English</option>
                         <option value="font-family: 'Courier Prime', monospace;" data-text="font-family: 'Courier Prime', monospace;">Mecanografiada (Courier)</option>
                     </select>
                 </div>
@@ -339,6 +340,10 @@
         function pixelToAxial(px, py) {
             return axialRound((Math.sqrt(3)/3 * px - 1/3 * py) / R, (2/3 * py) / R);
         }
+        
+        function getHexCenter(q, r) { 
+            return { x: W * (q + r / 2), y: H * 0.75 * r }; 
+        }
 
         // --- ESTADO GLOBAL ---
         let mapTitle = 'Mi Principado de Mausritter';
@@ -370,32 +375,26 @@
             autoSaveTimer = setTimeout(() => {
                 saveToLocalStorage();
                 document.getElementById('autoSaveStatus').innerText = "Autoguardado activado";
-            }, 1500); // Guarda 1.5s después de dejar de escribir/interactuar
+            }, 1500);
         }
 
-        // Función auxiliar para quitar las imágenes Base64 pesadas antes de guardar en LocalStorage
-        // para no exceder la cuota de memoria (aprox 5MB)
         function stripImagesForLocalSave(dataObj) {
-            let cleanData = JSON.parse(JSON.stringify(dataObj)); // Clon profundo
+            let cleanData = JSON.parse(JSON.stringify(dataObj));
             for (let id in cleanData.hexes) {
-                cleanData.hexes[id].imageUrl = null; // No guardar la imagen de la aventura
-                cleanData.hexes[id].enemies.forEach(e => e.imageUrl = null); // No guardar imagenes de enemigos
-                cleanData.hexes[id].npcs.forEach(n => n.imageUrl = null); // No guardar imagenes de npcs
+                cleanData.hexes[id].imageUrl = null; 
+                cleanData.hexes[id].enemies.forEach(e => e.imageUrl = null);
+                cleanData.hexes[id].npcs.forEach(n => n.imageUrl = null);
             }
             return cleanData;
         }
 
         function saveToLocalStorage() {
-            const projectData = {
-                mapTitle, mapShape, mapSize, mapRows, hexes
-            };
-            
+            const projectData = { mapTitle, mapShape, mapSize, mapRows, hexes };
             try {
-                // Para LocalStorage quitamos las imagenes (evitar Error Quota Exceeded)
                 const safeData = stripImagesForLocalSave(projectData);
                 localStorage.setItem('mausritterAutoSave', JSON.stringify(safeData));
             } catch (e) {
-                console.warn("El mapa es demasiado grande para autoguardar. Usa el botón 'Guardar Proyecto'.", e);
+                console.warn("Límite memoria superado en autoguardado.", e);
                 document.getElementById('autoSaveStatus').innerText = "Error: Límite memoria. Guarda manual.";
             }
         }
@@ -404,23 +403,18 @@
             const savedData = localStorage.getItem('mausritterAutoSave');
             if (savedData) {
                 try {
-                    const projectData = JSON.parse(savedData);
-                    restoreProjectData(projectData);
+                    restoreProjectData(JSON.parse(savedData));
                     return true;
-                } catch(e) {
-                    console.error("Error al cargar autoguardado", e);
-                    return false;
-                }
+                } catch(e) { return false; }
             }
             return false;
         }
 
         function saveProjectFile() {
-            // Guardar proyecto COMPLETO (incluye TODAS las imágenes en Base64)
             const projectData = { mapTitle, mapShape, mapSize, mapRows, hexes };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
             const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href",     dataStr);
+            downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", mapTitle.replace(/\s+/g, '_') + ".maus");
             document.body.appendChild(downloadAnchorNode); 
             downloadAnchorNode.click();
@@ -433,15 +427,14 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const projectData = JSON.parse(e.target.result);
-                    restoreProjectData(projectData);
-                    saveToLocalStorage(); // Refrescar autoguardado con el nuevo archivo
+                    restoreProjectData(JSON.parse(e.target.result));
+                    saveToLocalStorage();
                 } catch(err) {
-                    alert("Error: El archivo no parece ser un proyecto válido de Mausritter (.maus)");
+                    alert("Error: El archivo no es un proyecto válido (.maus)");
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Resetear input
+            event.target.value = '';
         }
 
         function restoreProjectData(data) {
@@ -451,7 +444,6 @@
             mapRows = data.mapRows || 5;
             hexes = data.hexes || {};
             
-            // Actualizar la interfaz global
             document.getElementById('mapTitleInput').value = mapTitle;
             document.getElementById('displayTitle').innerText = mapTitle;
             document.getElementById('mapShapeSelect').value = mapShape;
@@ -461,9 +453,7 @@
             document.getElementById('mapRowsInput').value = mapRows;
             document.getElementById('hexCount').innerText = `${Object.keys(hexes).length} Hexágonos`;
             
-            selectedHexId = null;
-            updateInspectorUI();
-            renderMap();
+            selectedHexId = null; updateInspectorUI(); renderMap();
         }
 
         // ------------------------------------
@@ -499,16 +489,13 @@
         }
 
         function initListeners() {
-            // Se añade debounceAutoSave() a las interacciones globales
             document.getElementById('mapTitleInput').addEventListener('input', e => { mapTitle = e.target.value; document.getElementById('displayTitle').innerText = mapTitle || 'Sin Título'; debounceAutoSave();});
             document.getElementById('mapShapeSelect').addEventListener('change', e => { mapShape = e.target.value; document.getElementById('mapRowsContainer').classList.toggle('hidden', mapShape !== 'rectangle'); document.getElementById('mapSizeLabel').innerText = mapShape === 'flower' ? 'Radio' : 'Columnas'; debounceAutoSave();});
             document.getElementById('mapSizeInput').addEventListener('input', e => { mapSize = parseInt(e.target.value) || 1; debounceAutoSave();});
             document.getElementById('mapRowsInput').addEventListener('input', e => { mapRows = parseInt(e.target.value) || 1; debounceAutoSave();});
             
             document.getElementById('generateBtn').addEventListener('click', () => {
-                if(confirm("¿Estás seguro? Esto borrará TODO el mapa y aventuras actuales para crear uno nuevo en blanco.")) {
-                    generateMap();
-                }
+                if(confirm("¿Estás seguro? Esto borrará TODO el mapa y aventuras actuales para crear uno nuevo en blanco.")) generateMap();
             });
             document.getElementById('exportMapBtn').addEventListener('click', exportMapAsImage);
 
@@ -537,42 +524,69 @@
                 if (g) {
                     const hexId = g.dataset.id;
                     if (activeTool === 'move') {
-                        isDragging = true; dragTarget = hexes[hexId]; selectedHexId = hexId; updateInspectorUI();
-                        const pt = getSVGPoint(e); dragOffsetX = pt.x - dragTarget.x; dragOffsetY = pt.y - dragTarget.y;
+                        isDragging = true; 
+                        dragTarget = hexes[hexId]; 
+                        selectedHexId = hexId; 
+                        updateInspectorUI();
+                        
+                        const pt = getSVGPoint(e); 
+                        dragOffsetX = pt.x - dragTarget.x; 
+                        dragOffsetY = pt.y - dragTarget.y;
+                        
+                        dragTarget.freeX = dragTarget.x;
+                        dragTarget.freeY = dragTarget.y;
+                        
                         g.parentNode.appendChild(g);
                     } else { isPainting = true; handleHexInteract(hexId); }
                 }
             });
+            
             svgEl.addEventListener('mouseover', e => {
                 if (!isPainting || activeTool === 'move') return;
                 const g = e.target.closest('g.hex-group'); if (g) handleHexInteract(g.dataset.id);
             });
+            
             window.addEventListener('mousemove', e => {
                 if (isDragging && dragTarget) {
-                    const pt = getSVGPoint(e); dragTarget.x = pt.x - dragOffsetX; dragTarget.y = pt.y - dragOffsetY;
+                    const pt = getSVGPoint(e); 
+                    dragTarget.freeX = pt.x - dragOffsetX; 
+                    dragTarget.freeY = pt.y - dragOffsetY;
+                    
+                    const { q, r } = pixelToAxial(dragTarget.freeX, dragTarget.freeY);
+                    const exactCenter = getHexCenter(q, r);
+                    
                     const g = document.querySelector(`g.hex-group[data-id="${dragTarget.id}"]`);
-                    if (g) g.setAttribute('transform', `translate(${dragTarget.x}, ${dragTarget.y})`);
+                    if (g) g.setAttribute('transform', `translate(${exactCenter.x}, ${exactCenter.y})`);
                 }
             });
+            
             function handleHexDrop() {
                 if (isDragging && dragTarget) {
-                    const { q: newQ, r: newR } = pixelToAxial(dragTarget.x, dragTarget.y);
+                    const { q: newQ, r: newR } = pixelToAxial(dragTarget.freeX, dragTarget.freeY);
                     const isOccupied = Object.values(hexes).some(h => h.id !== dragTarget.id && h.q === newQ && h.r === newR);
-                    if (!isOccupied) { dragTarget.q = newQ; dragTarget.r = newR; }
+                    
+                    if (!isOccupied) { 
+                        dragTarget.q = newQ; 
+                        dragTarget.r = newR; 
+                    }
+                    
                     const exactCenter = getHexCenter(dragTarget.q, dragTarget.r);
-                    dragTarget.x = exactCenter.x; dragTarget.y = exactCenter.y;
-                    isDragging = false; dragTarget = null; renderMap(); debounceAutoSave();
+                    dragTarget.x = exactCenter.x; 
+                    dragTarget.y = exactCenter.y;
+                    
+                    isDragging = false; 
+                    dragTarget = null; 
+                    renderMap(); 
+                    debounceAutoSave();
                 }
             }
+            
             window.addEventListener('mouseup', () => { handleHexDrop(); isPainting = false; });
             mapArea.addEventListener('mouseleave', () => { handleHexDrop(); isPainting = false; });
         }
 
         function updateData(key, value) { 
-            if(selectedHexId) {
-                hexes[selectedHexId][key] = value; 
-                debounceAutoSave();
-            }
+            if(selectedHexId) { hexes[selectedHexId][key] = value; debounceAutoSave(); }
         }
 
         // --- TABLAS PERSONALIZADAS ---
@@ -586,14 +600,12 @@
                 id: 'table_' + Date.now(),
                 title: titleInput.value.trim() || 'Nueva Tabla',
                 columnName: columnInput.value.trim() || 'Resultado',
-                description: '',
-                footer: '',
+                description: '', footer: '',
                 rows: Array(parseInt(rowsInput.value) || 6).fill('')
             };
             hexes[selectedHexId].customTables.push(newTable);
             titleInput.value = ''; columnInput.value = ''; rowsInput.value = '6';
-            renderTablesUI();
-            debounceAutoSave();
+            renderTablesUI(); debounceAutoSave();
         }
         function removeCustomTable(tableIndex) {
             if(!selectedHexId) return; hexes[selectedHexId].customTables.splice(tableIndex, 1); renderTablesUI(); debounceAutoSave();
@@ -652,8 +664,7 @@
                 name: 'Nuevo Enemigo', type: '', appearance: '', behavior: '', motivation: '', 
                 hp: 3, str: 10, dex: 10, wil: 10, armor: 0, attack: '', special: '', weakness: '', imageUrl: null 
             });
-            renderEnemiesUI();
-            debounceAutoSave();
+            renderEnemiesUI(); debounceAutoSave();
         }
         function removeEnemy(index) { if(!selectedHexId) return; hexes[selectedHexId].enemies.splice(index, 1); renderEnemiesUI(); debounceAutoSave(); }
         
@@ -711,8 +722,7 @@
         function addNPC() {
             if(!selectedHexId) return;
             hexes[selectedHexId].npcs.push({ name: 'Nuevo PNJ', appearance: '', personality: '', motivation: '', secret: '', imageUrl: null });
-            renderNPCsUI();
-            debounceAutoSave();
+            renderNPCsUI(); debounceAutoSave();
         }
         function removeNPC(index) { if(!selectedHexId) return; hexes[selectedHexId].npcs.splice(index, 1); renderNPCsUI(); debounceAutoSave(); }
 
@@ -756,15 +766,13 @@
         function addLocation() {
             if(!selectedHexId) return;
             hexes[selectedHexId].locations.push({ name: 'Nuevo Lugar', description: '', interesting: '', danger: '', clue: '' });
-            renderLocationsUI();
-            debounceAutoSave();
+            renderLocationsUI(); debounceAutoSave();
         }
 
         function removeLocation(index) {
             if(!selectedHexId) return;
             hexes[selectedHexId].locations.splice(index, 1);
-            renderLocationsUI();
-            debounceAutoSave();
+            renderLocationsUI(); debounceAutoSave();
         }
 
         function renderLocationsUI() {
@@ -876,10 +884,8 @@
                     svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
                 }
                 
-                // Numeración en la esquina superior izquierda, estilo discreto
                 svgHTML += `<text x="${-W/2 + 10}" y="${-R/2 + 16}" text-anchor="start" font-family="sans-serif" font-size="10px" font-weight="bold" fill="${hex.imageUrl ? '#ffffff' : '#475569'}" opacity="${hex.imageUrl ? '1' : '0.8'}" style="pointer-events: none; ${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
                 
-                // Icono
                 if (t.icon && !hex.imageUrl) {
                     svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" font-size="20px" style="pointer-events: none;">${t.icon}</text>`;
                 }
@@ -908,7 +914,6 @@
             const vW = viewBox[2];
             const vH = viewBox[3];
 
-            // 1. Preparar lista de leyendas (Aventuras)
             const hexList = Object.values(hexes).sort((a, b) => a.label - b.label);
             const legendItems = hexList.map(h => {
                 let title = h.title.trim();
@@ -919,54 +924,46 @@
                 return `${h.label}.- ${title}`;
             });
 
-            // 2. NUEVO: Escala visual diferenciada (El mapa es el doble de grande que el texto)
             const mapVisualScale = 2.0; 
             const drawW = vW * mapVisualScale;
             const drawH = vH * mapVisualScale;
 
-            // 3. Configurar dimensiones generales (Manteniendo Alta Calidad sin romper la RAM)
-            const scale = 3; // (Como el mapa ya se multiplicó x2, su resolución real final será 6x)
+            const scale = 3; 
             const padding = 60;
             const titleHeight = 80;
             
-            const lineHeight = 24; // Interlineado más apretado para las letras
+            const lineHeight = 24; 
             const maxLegendHeight = Math.max(drawH, 400); 
-            // Calcular cuántas líneas caben por columna (dejando un margen)
             const linesPerCol = Math.max(10, Math.floor(maxLegendHeight / lineHeight) - 2);
             const numCols = Math.ceil(legendItems.length / linesPerCol);
-            const colWidth = 220; // Columnas mucho más estrechas para que no coman espacio
+            const colWidth = 220; 
             const legendWidth = legendItems.length > 0 ? (numCols * colWidth) : 0;
 
-            // Ancho del canvas = margen + mapa gigante + margen + leyendas pequeñas + margen
             const canvasW = padding + drawW + (legendWidth > 0 ? padding : 0) + legendWidth + padding;
             const canvasH = padding + titleHeight + Math.max(drawH, legendItems.length > 0 ? linesPerCol * lineHeight : 0) + padding + 40;
 
             canvas.width = canvasW * scale;
             canvas.height = canvasH * scale;
             
-            // Dibujar el fondo
             ctx.fillStyle = "#f8fafc"; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             ctx.scale(scale, scale);
 
             img.onload = () => {
-                // Título del Mapa Principal
                 ctx.fillStyle = "#0f172a";
                 ctx.font = "bold 46px 'Merriweather', serif";
                 ctx.fillText(mapTitle || 'Mi Principado de Mausritter', padding, padding + 40);
 
-                // DIBUJAR EL MAPA SVG GIGANTE
                 ctx.drawImage(img, padding, padding + titleHeight, drawW, drawH);
 
-                // Dibujar la Tabla de Aventuras (más pequeña y compacta)
                 if (legendItems.length > 0) {
                     ctx.fillStyle = "#1e293b";
                     ctx.font = "bold 20px 'Merriweather', serif";
                     const legendStartX = padding + drawW + padding;
                     ctx.fillText("Lugares y Rumores", legendStartX, padding + titleHeight + 30);
 
-                    ctx.font = "14px 'Inter', sans-serif"; // Fuente reducida para la lista
+                    ctx.font = "14px 'Inter', sans-serif"; 
                     ctx.fillStyle = "#475569";
                     
                     legendItems.forEach((item, index) => {
@@ -976,7 +973,6 @@
                         const y = padding + titleHeight + 65 + (row * lineHeight);
                         
                         let text = item;
-                        // Acortar texto si es muy largo para la columna
                         if (ctx.measureText(text).width > colWidth - 20) {
                             while(text.length > 0 && ctx.measureText(text + '...').width > colWidth - 20) {
                                 text = text.slice(0, -1);
@@ -987,12 +983,10 @@
                     });
                 }
 
-                // Marca de agua
                 ctx.font = "12px 'Inter', sans-serif";
                 ctx.fillStyle = "#94a3b8";
                 ctx.fillText("Generado con Maquetador Mausritter", canvasW - 260, canvasH - 20);
 
-                // Descargar
                 const link = document.createElement("a"); 
                 link.download = `${(mapTitle || 'Mapa').replace(/\s+/g, '_')}_Mapa.png`;
                 link.href = canvas.toDataURL("image/png", 1.0); 
@@ -1009,7 +1003,6 @@
                 alert("Hubo un error al generar el mapa.");
             };
 
-            // Codificar el SVG para inyectarlo en la imagen
             img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
         }
 
@@ -1029,7 +1022,7 @@
             <head>
                 <meta charset="UTF-8">
                 <title>${hex.title || `Aventura Hexágono ${hex.label}`}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
                 <style>
                     /* Estilos base para la impresión OSR */
                     @page { size: A4; margin: 15mm; }

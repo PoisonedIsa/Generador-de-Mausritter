@@ -29,44 +29,46 @@
         .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
         .rich-text-content h4 { font-family: 'Merriweather', serif; font-weight: bold; font-size: 1.1em; margin-top: 0.5rem; margin-bottom: 0.25rem; }
 
-        /* Estilos específicos para la plantilla PDF (Oculta en UI pero en el flujo DOM) */
+        /* --- ESTILOS ESPECÍFICOS PARA LA PLANTILLA PDF --- */
         #pdf-export-wrapper {
             position: absolute;
             left: -9999px;
             top: 0;
-            width: 800px;
+            width: 800px; /* Ancho de renderizado óptimo para A4 */
         }
         #pdf-export-container {
-            background: white;
+            background: #fdfbf7; /* Tono papel antiguo */
             color: black;
             text-align: left;
+            padding: 10px;
         }
         /* Reglas de texto enriquecido para el PDF */
         #pdf-export-container ul { list-style-type: disc; margin-left: 24px; margin-top: 4px; margin-bottom: 4px; }
         #pdf-export-container h4 { font-family: 'Merriweather', serif; font-size: 15px; font-weight: bold; margin-top: 10px; margin-bottom: 4px; color: #111827; }
         #pdf-export-container p, #pdf-export-container div { margin-bottom: 4px; }
 
-        .pdf-page {
-            padding: 40px;
-            background-color: #fdfbf7;
-        }
         .pdf-title { font-family: 'Merriweather', serif; font-size: 32px; font-weight: 900; border-bottom: 2px solid #1a202c; margin-bottom: 20px; padding-bottom: 10px;}
-        .pdf-section-title { font-family: 'Merriweather', serif; font-size: 18px; font-weight: 700; border-bottom: 1px solid #cbd5e1; margin-top: 20px; margin-bottom: 10px; padding-bottom: 5px; page-break-after: avoid;}
-        .pdf-text { font-size: 14px; line-height: 1.6; margin-bottom: 15px;}
+        .pdf-section-title { font-family: 'Merriweather', serif; font-size: 18px; font-weight: 700; border-bottom: 1px solid #cbd5e1; margin-top: 25px; margin-bottom: 12px; padding-bottom: 5px; page-break-after: avoid; page-break-inside: avoid; clear: both;}
+        .pdf-text { font-size: 14px; line-height: 1.6; margin-bottom: 15px; page-break-inside: avoid;}
         
+        /* SISTEMA MASONRY PARA PDF (Evita espacios vacíos y respeta cortes) */
+        .pdf-masonry { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-bottom: 10px;}
+        .pdf-masonry-item { width: calc(50% - 10px); page-break-inside: avoid; break-inside: avoid; margin-bottom: 5px;}
+        .pdf-full-width-item { width: 100%; page-break-inside: avoid; break-inside: avoid; margin-bottom: 15px;}
+
         /* Estilos para Tablas OSR en PDF */
-        .pdf-table-main-title { font-family: 'Merriweather', serif; font-size: 20px; font-weight: 900; margin-bottom: 4px; margin-top: 15px; color: #111827; }
-        .pdf-table-desc { font-size: 13px; color: #475569; margin-bottom: 8px; line-height: 1.4; }
-        .pdf-rpg-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 13px; page-break-inside: avoid; border-bottom: 2px solid #1f2937; border-top: 2px solid #1f2937;}
-        .pdf-rpg-table th { background-color: #f1f5f9; padding: 4px 6px; text-align: left; font-family: 'Merriweather', serif; font-size: 14px; border-bottom: 1px solid #94a3b8;}
+        .pdf-table-main-title { font-family: 'Merriweather', serif; font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #111827; }
+        .pdf-table-desc { font-size: 12.5px; color: #475569; margin-bottom: 8px; line-height: 1.4; }
+        .pdf-rpg-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 12.5px; border-bottom: 2px solid #1f2937; border-top: 2px solid #1f2937;}
+        .pdf-rpg-table th { background-color: #f1f5f9; padding: 4px 6px; text-align: left; font-family: 'Merriweather', serif; font-size: 13.5px; border-bottom: 1px solid #94a3b8;}
         .pdf-rpg-table td { padding: 4px 6px; vertical-align: top;}
         .pdf-rpg-table tr:nth-child(even) { background-color: #f8fafc; }
         .pdf-rpg-table th:first-child { width: 35px; text-align: center; font-family: 'Merriweather', serif; font-weight: 900; }
         .pdf-rpg-table td:first-child { font-weight: bold; width: 35px; text-align: center; font-family: 'Inter', sans-serif;}
-        .pdf-table-footer { font-size: 11px; color: #64748b; margin-bottom: 20px; line-height: 1.3; }
+        .pdf-table-footer { font-size: 11px; color: #64748b; line-height: 1.3; }
         
         /* Bloques en PDF */
-        .pdf-block { border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 15px; background: white; page-break-inside: avoid; border-radius: 4px; box-shadow: 2px 2px 0px #cbd5e1;}
+        .pdf-block { border: 1px solid #cbd5e1; padding: 12px; background: white; border-radius: 4px; box-shadow: 2px 2px 0px #cbd5e1;}
         .pdf-block-title { font-family: 'Merriweather', serif; font-weight: bold; font-size: 16px; margin-bottom: 6px; color: #0f172a;}
         .pdf-stats { font-size: 12px; color: #334155; margin-bottom: 8px; font-weight: bold; background: #f1f5f9; padding: 4px; border-radius: 2px;}
         .pdf-field { font-size: 13px; margin-bottom: 4px; line-height: 1.4; }
@@ -310,7 +312,6 @@
 
     <script>
         // --- UTILIDAD DE EDITOR ENRIQUECIDO ---
-        // Genera el HTML de un editor de texto WYSIWYG
         function createRichTextEditor(value, onInputAction, placeholder, minHeight = "60px") {
             return `
             <div class="border border-slate-300 rounded focus-within:border-emerald-500 overflow-hidden flex flex-col bg-white shadow-sm">
@@ -332,7 +333,6 @@
             `;
         }
 
-        // Comprueba si una cadena HTML tiene texto real o está vacía/solo saltos de línea
         function hasText(htmlString) {
             if (!htmlString) return false;
             const tmp = document.createElement('div');
@@ -422,7 +422,6 @@
             document.getElementById('exportMapBtn').addEventListener('click', exportMapAsImage);
 
             document.getElementById('hexTitleInput').addEventListener('input', e => updateData('title', e.target.value));
-            // Actualización para el div editable de la Sinopsis
             document.getElementById('hexDescInput').addEventListener('input', e => updateData('description', e.target.innerHTML));
             
             document.getElementById('hexTerrainSelect').addEventListener('change', e => { updateData('terrain', e.target.value); renderMap(); });
@@ -522,7 +521,6 @@
                     <div class="p-2 bg-slate-100 border-b border-slate-300 flex flex-col gap-2 pr-10">
                          <input type="text" value="${table.title}" onchange="updateTableTitle(${tIndex}, this.value)" class="w-full font-serif font-black text-lg text-slate-800 bg-transparent outline-none focus:border-b-2 border-emerald-500" placeholder="Título (ej. Encuentros)">
                          
-                         <!-- Editor WYSIWYG Descripción -->
                          ${createRichTextEditor(table.description, `updateTableDescription(${tIndex}, this.innerHTML)`, 'Párrafo sobre la tabla (Opcional)...', '60px')}
 
                          <div class="flex items-center gap-2">
@@ -543,7 +541,6 @@
                 });
                 html += `</div>
                     <div class="p-2 bg-slate-50 border-t border-slate-200">
-                        <!-- Editor WYSIWYG Footer -->
                         ${createRichTextEditor(table.footer, `updateTableFooter(${tIndex}, this.innerHTML)`, 'Nota al pie de la tabla (Opcional)...', '40px')}
                     </div>
                 </div>`;
@@ -752,7 +749,6 @@
             document.getElementById('inspectorHeaderTitle').innerText = hex.title || `Hexágono ${hex.label}`;
             document.getElementById('hexTitleInput').value = hex.title;
             document.getElementById('hexTerrainSelect').value = hex.terrain;
-            // Configurar contenido HTML en el campo rico de la sinopsis
             document.getElementById('hexDescInput').innerHTML = hex.description || '';
 
             if (hex.imageUrl) document.getElementById('removeImageBtn').classList.remove('hidden');
@@ -798,7 +794,7 @@
             img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
         }
 
-        // --- EXPORTACIÓN A PDF (Integrando estilos enriquecidos) ---
+        // --- EXPORTACIÓN A PDF MEJORADA (Mampostería y Cuidado de Cortes) ---
         function exportAdventurePDF() {
             if(!selectedHexId) return;
             const btn = event.currentTarget, originalText = btn.innerHTML;
@@ -806,13 +802,17 @@
             const hex = hexes[selectedHexId];
             const container = document.getElementById('pdf-export-container');
             
+            // Función para renderizar tablas en sistema Masonry
             const renderPDFCustomTables = (tablesArray) => {
-                let html = '';
+                let html = '<div class="pdf-masonry">';
+                let hasTables = false;
                 tablesArray.forEach(table => {
                     if(table.rows.every(row => !row.trim())) return;
+                    hasTables = true;
                     let diceType = 'd' + table.rows.length;
                     if(table.rows.length === 36) diceType = 'd66';
                     
+                    html += `<div class="pdf-masonry-item">`;
                     html += `<div class="pdf-table-main-title">${table.title}</div>`;
                     if (hasText(table.description)) html += `<div class="pdf-table-desc">${table.description}</div>`;
                     
@@ -825,38 +825,37 @@
                         }
                     });
                     html += `</tbody></table>`;
-                    
                     if (hasText(table.footer)) html += `<div class="pdf-table-footer">${table.footer}</div>`;
+                    html += `</div>`; // fin masonry-item
                 });
-                return html;
+                html += '</div>';
+                return hasTables ? html : '';
             };
 
+            // Flujo principal del PDF
             let html = `
                 <div class="pdf-page">
                     <div class="pdf-title">${hex.title || `Aventura en Hexágono ${hex.label}`}</div>
-                    <div style="display: flex; gap: 30px;">
-                        <!-- Columna Izquierda -->
-                        <div style="flex: 1;">
             `;
-            if(hex.imageUrl) html += `<div style="margin-bottom: 20px; border: 2px solid #334155; padding: 5px;"><img src="${hex.imageUrl}" style="width: 100%; object-fit: cover;"></div>`;
+            
+            if(hex.imageUrl) html += `<div style="margin-bottom: 25px; padding: 5px; border: 2px solid #334155;"><img src="${hex.imageUrl}" style="width: 100%; max-height: 350px; object-fit: contain; display: block; margin: 0 auto;"></div>`;
             if(hasText(hex.description)) html += `<div class="pdf-section-title">Sinopsis</div><div class="pdf-text">${hex.description}</div>`;
+            
+            // Tablas (ahora se renderizan en 2 columnas auto-ajustables si hay más de una)
             html += renderPDFCustomTables(hex.customTables);
-            html += `</div><!-- Fin Columna Izquierda -->
-                     <!-- Columna Derecha -->
-                     <div style="flex: 1;">`;
 
-            // Renderizar Enemigos
+            // Renderizar Enemigos (En Masonry)
             if(hex.enemies.length > 0) {
+                let enemiesHtml = `<div class="pdf-section-title">Enemigos y Monstruos</div><div class="pdf-masonry">`;
                 let hasValidEnemies = false;
-                let enemiesHtml = `<div class="pdf-section-title">Enemigos y Monstruos</div>`;
                 hex.enemies.forEach(en => {
-                    if(!en.name.trim() && !en.type.trim() && !en.attack.trim() && !en.appearance.trim()) return; // Ignorar totalmente vacíos
+                    if(!en.name.trim() && !en.type.trim() && !en.attack.trim() && !en.appearance.trim()) return;
                     hasValidEnemies = true;
                     
                     const imgHtml = en.imageUrl ? `<div style="margin-bottom: 10px; text-align: center;"><img src="${en.imageUrl}" style="max-height: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; padding: 2px; width: 100%;"></div>` : '';
                     const armor = en.armor > 0 ? `, Armadura ${en.armor}` : '';
                     
-                    enemiesHtml += `<div class="pdf-block">${imgHtml}<div class="pdf-block-title">${en.name}</div>`;
+                    enemiesHtml += `<div class="pdf-block pdf-masonry-item">${imgHtml}<div class="pdf-block-title">${en.name}</div>`;
                     if(en.type) enemiesHtml += `<div class="pdf-field"><b>Tipo de criatura:</b> ${en.type}</div>`;
                     if(en.appearance) enemiesHtml += `<div class="pdf-field"><b>Apariencia:</b> ${en.appearance.replace(/\n/g, '<br>')}</div>`;
                     if(en.behavior) enemiesHtml += `<div class="pdf-field"><b>Comportamiento:</b> ${en.behavior.replace(/\n/g, '<br>')}</div>`;
@@ -867,21 +866,22 @@
                     if(en.attack) enemiesHtml += `<div class="pdf-field"><b>Ataque:</b> ${en.attack}</div>`;
                     if(en.special) enemiesHtml += `<div class="pdf-field" style="color:#047857;"><b>Especial:</b> ${en.special.replace(/\n/g, '<br>')}</div>`;
                     if(en.weakness) enemiesHtml += `<div class="pdf-field"><b>Debilidad:</b> ${en.weakness}</div>`;
-                    enemiesHtml += `</div>`;
+                    enemiesHtml += `</div>`; // fin block
                 });
+                enemiesHtml += `</div>`; // fin masonry
                 if(hasValidEnemies) html += enemiesHtml;
             }
 
-            // Renderizar PNJs
+            // Renderizar PNJs (En Masonry)
             if(hex.npcs.length > 0) {
+                let npcsHtml = `<div class="pdf-section-title">Personajes No Jugadores</div><div class="pdf-masonry">`;
                 let hasValidNpcs = false;
-                let npcsHtml = `<div class="pdf-section-title">Personajes No Jugadores</div>`;
                 hex.npcs.forEach(npc => {
                     if(!npc.name.trim() && !npc.appearance.trim() && !npc.personality.trim()) return;
                     hasValidNpcs = true;
                     
                     const imgHtml = npc.imageUrl ? `<div style="margin-bottom: 10px; text-align: center;"><img src="${npc.imageUrl}" style="max-height: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; padding: 2px; width: 100%;"></div>` : '';
-                    npcsHtml += `<div class="pdf-block">${imgHtml}<div class="pdf-block-title">${npc.name}</div>`;
+                    npcsHtml += `<div class="pdf-block pdf-masonry-item">${imgHtml}<div class="pdf-block-title">${npc.name}</div>`;
                     
                     if(npc.appearance) npcsHtml += `<div class="pdf-field"><b>Apariencia:</b> ${npc.appearance.replace(/\n/g, '<br>')}</div>`;
                     if(npc.personality) npcsHtml += `<div class="pdf-field"><b>Personalidad:</b> ${npc.personality}</div>`;
@@ -889,18 +889,19 @@
                     if(npc.secret) npcsHtml += `<div class="pdf-field" style="color:#475569; font-style:italic;"><b>Secreto:</b> ${npc.secret.replace(/\n/g, '<br>')}</div>`;
                     npcsHtml += `</div>`;
                 });
+                npcsHtml += `</div>`;
                 if(hasValidNpcs) html += npcsHtml;
             }
 
-            // Renderizar Lugares
+            // Renderizar Lugares (Acho completo para mayor legibilidad)
             if(hex.locations.length > 0) {
-                let hasValidLocs = false;
                 let locsHtml = `<div class="pdf-section-title">Lugares de Interés</div>`;
+                let hasValidLocs = false;
                 hex.locations.forEach((loc, i) => {
                     if(!loc.name.trim() && !loc.description.trim()) return;
                     hasValidLocs = true;
                     
-                    locsHtml += `<div style="margin-bottom: 15px; page-break-inside: avoid;">
+                    locsHtml += `<div class="pdf-full-width-item">
                                 <span style="font-family: 'Merriweather', serif; font-weight: bold; font-size: 15px; color: #1e293b;">${i+1}. ${loc.name}</span>`;
                     if(loc.description) locsHtml += `<div class="pdf-text" style="margin-top: 5px; margin-bottom: 4px;"><b>Descripción:</b> ${loc.description.replace(/\n/g, '<br>')}</div>`;
                     if(loc.interesting) locsHtml += `<div class="pdf-field"><b>Algo interesante:</b> ${loc.interesting}</div>`;
@@ -912,8 +913,6 @@
             }
 
             html += `
-                        </div><!-- Fin Columna Derecha -->
-                    </div><!-- Fin Flex -->
                     <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 10px;">
                         Generado con Maquetador Mausritter - Hexágono ${hex.label}
                     </div>
@@ -924,11 +923,12 @@
 
             setTimeout(() => {
                 const opt = {
-                    margin:       [0.5, 0.5, 0.5, 0.5],
+                    margin:       [0.4, 0.4, 0.4, 0.4], // Ajustado para evitar recortes en los bordes
                     filename:     `Hex${hex.label}_${(hex.title || 'Aventura').replace(/\s+/g, '_')}.pdf`,
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+                    pagebreak:    { mode: ['css', 'legacy'] } // Crucial para respetar los saltos de página de CSS
                 };
                 html2pdf().set(opt).from(container).save().then(() => {
                     container.innerHTML = ''; btn.innerHTML = originalText; btn.disabled = false;

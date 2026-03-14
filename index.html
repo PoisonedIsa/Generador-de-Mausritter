@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maquetador Mausritter y Creador de Aventuras</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTML2PDF para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Merriweather', serif; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Estilos específicos para la plantilla PDF (Oculta en UI pero en el flujo DOM) */
+        #pdf-export-wrapper {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 800px;
+        }
+        #pdf-export-container {
+            background: white;
+            color: black;
+            text-align: left;
+        }
+        .pdf-page {
+            padding: 40px;
+            background-color: #fdfbf7;
+        }
+        .pdf-title { font-family: 'Merriweather', serif; font-size: 32px; font-weight: 900; border-bottom: 2px solid #1a202c; margin-bottom: 20px; padding-bottom: 10px;}
+        .pdf-section-title { font-family: 'Merriweather', serif; font-size: 18px; font-weight: 700; border-bottom: 1px solid #cbd5e1; margin-top: 20px; margin-bottom: 10px; padding-bottom: 5px; page-break-after: avoid;}
+        .pdf-text { font-size: 14px; line-height: 1.6; margin-bottom: 15px;}
+        
+        /* Estilos para Tablas OSR en PDF */
+        .pdf-table-main-title { font-family: 'Merriweather', serif; font-size: 20px; font-weight: 900; margin-bottom: 4px; margin-top: 15px; color: #111827; }
+        .pdf-rpg-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; page-break-inside: avoid; border-bottom: 2px solid #1f2937; border-top: 2px solid #1f2937;}
+        .pdf-rpg-table th { background-color: #f1f5f9; padding: 4px 6px; text-align: left; font-family: 'Merriweather', serif; font-size: 14px; border-bottom: 1px solid #94a3b8;}
+        .pdf-rpg-table td { padding: 4px 6px; vertical-align: top;}
+        .pdf-rpg-table tr:nth-child(even) { background-color: #f8fafc; }
+        .pdf-rpg-table th:first-child { width: 35px; text-align: center; font-family: 'Merriweather', serif; font-weight: 900; }
+        .pdf-rpg-table td:first-child { font-weight: bold; width: 35px; text-align: center; font-family: 'Inter', sans-serif;}
+        
+        /* Bloques en PDF */
+        .pdf-block { border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 15px; background: white; page-break-inside: avoid; border-radius: 4px; box-shadow: 2px 2px 0px #cbd5e1;}
+        .pdf-block-title { font-family: 'Merriweather', serif; font-weight: bold; font-size: 16px; margin-bottom: 6px; color: #0f172a;}
+        .pdf-stats { font-size: 12px; color: #334155; margin-bottom: 8px; font-weight: bold; background: #f1f5f9; padding: 4px; border-radius: 2px;}
+        .pdf-field { font-size: 13px; margin-bottom: 4px; line-height: 1.4; }
+        .pdf-field b { color: #1e293b; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
+
+    <!-- PANEL IZQUIERDO: HERRAMIENTAS Y MAPA -->
+    <div class="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10 overflow-y-auto h-full shrink-0">
+        <div class="p-4 border-b border-slate-200 bg-slate-50">
+            <h1 class="text-xl font-bold flex items-center gap-2 text-slate-900">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
+                Maquetador Mausritter
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">Mapa y Aventuras</p>
+        </div>
+
+        <div class="p-4 flex-1">
+            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line></svg> Ajustes del Mapa
+            </h2>
+            
+            <label class="block text-sm font-medium mb-1">Título del Mapa</label>
+            <input type="text" id="mapTitleInput" class="w-full p-2 border border-slate-300 rounded mb-4 focus:ring-2 focus:ring-emerald-500 outline-none" value="Mi Principado de Mausritter">
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Forma</label>
+                    <select id="mapShapeSelect" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="flower">Hexagonal</option>
+                        <option value="rectangle">Rectangular</option>
+                    </select>
+                </div>
+                <div>
+                    <label id="mapSizeLabel" class="block text-sm font-medium mb-1">Radio</label>
+                    <input type="number" id="mapSizeInput" min="1" max="15" value="2" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+            </div>
+            
+            <div id="mapRowsContainer" class="mb-4 hidden">
+                <label class="block text-sm font-medium mb-1">Filas</label>
+                <input type="number" id="mapRowsInput" min="1" max="20" value="5" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+
+            <button id="generateBtn" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium py-2 rounded transition-colors text-sm">
+                Generar Nuevo Mapa (Borrará actual)
+            </button>
+
+            <hr class="my-6 border-slate-200" />
+
+            <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"></path><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"></path></svg> Terreno
+            </h2>
+
+            <div id="toolsContainer" class="grid grid-cols-2 gap-2">
+                <!-- Herramientas generadas por JS -->
+            </div>
+        </div>
+        
+        <div class="p-4 border-t border-slate-200 bg-white">
+            <button id="exportMapBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                Descargar Imagen Mapa
+            </button>
+            <button onclick="openCopyModal()" class="w-full text-center text-[10px] text-slate-300 hover:text-slate-500 mt-1 cursor-pointer transition-colors" title="Mensaje Oculto">
+                ⌘
+            </button>
+        </div>
+    </div>
+
+    <!-- ÁREA CENTRAL: EL MAPA SVG -->
+    <div class="flex-1 bg-slate-200 flex flex-col overflow-hidden relative" id="mapArea">
+        <div class="p-4 bg-white/60 border-b border-slate-300 flex justify-between items-center z-10 absolute top-0 w-full backdrop-blur-sm">
+            <h2 id="displayTitle" class="text-2xl font-black font-serif tracking-tight text-slate-800">Mi Principado de Mausritter</h2>
+            <span id="hexCount" class="bg-slate-800 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                0 Hexágonos
+            </span>
+        </div>
+
+        <div class="flex-1 overflow-auto flex items-center justify-center p-8 mt-16 cursor-crosshair h-full" id="svgContainer">
+            <svg id="hexSvg" xmlns="http://www.w3.org/2000/svg" class="w-full h-full max-h-[80vh] drop-shadow-md" style="min-width: 300px;"></svg>
+        </div>
+    </div>
+
+    <!-- PANEL DERECHO: INSPECTOR Y EDITOR DE AVENTURAS -->
+    <div class="w-full md:w-[480px] bg-white border-l border-slate-200 flex flex-col shadow-sm z-10 overflow-hidden h-full shrink-0">
+        
+        <!-- Estado sin selección -->
+        <div id="noSelectionPanel" class="p-8 h-full flex flex-col items-center justify-center text-center text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4 text-slate-300 opacity-50"><path d="M4 4l7.07 17 2.51-7.39L21 11.07z"></path><path d="M13 13l6 6"></path></svg>
+            <p class="text-lg font-medium text-slate-500">Aventura no seleccionada</p>
+            <p class="text-sm mt-2">Haz clic en un hexágono para redactar y exportar su aventura.</p>
+        </div>
+
+        <!-- Estado con selección -->
+        <div id="inspectorPanel" class="flex flex-col h-full hidden">
+            <!-- Cabecera del Inspector -->
+            <div class="p-4 border-b bg-emerald-50 flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-black font-serif text-lg shadow-sm" id="hexIdLabel">1</div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 font-serif" id="inspectorHeaderTitle">Hexágono</h2>
+                    <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider">Editor de Aventura</p>
+                </div>
+            </div>
+
+            <!-- Navegación por pestañas -->
+            <div class="flex border-b border-slate-200 bg-slate-50 text-sm font-medium">
+                <button onclick="switchTab('info')" id="tab-info" class="tab-btn flex-1 py-2 text-center border-b-2 border-emerald-500 text-emerald-700">Info</button>
+                <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn flex-1 py-2 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700">Tablas</button>
+                <button onclick="switchTab('characters')" id="tab-characters" class="tab-btn flex-1 py-2 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700">Personajes</button>
+                <button onclick="switchTab('locations')" id="tab-locations" class="tab-btn flex-1 py-2 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700">Lugares</button>
+            </div>
+
+            <!-- Contenido de las pestañas -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4" id="tabContentArea">
+                
+                <!-- PESTAÑA: INFO -->
+                <div id="content-info" class="tab-content space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Título de la Aventura</label>
+                        <input type="text" id="hexTitleInput" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none font-serif text-lg" placeholder="Ej. El Bosque Oscuro...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Terreno Base</label>
+                        <select id="hexTerrainSelect" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Imagen Principal (Opcional)</label>
+                        <input type="file" id="hexImageInput" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-slate-50">
+                        <button id="removeImageBtn" class="mt-2 text-xs font-bold text-red-500 hover:text-red-700 hidden flex items-center gap-1 transition-colors">
+                            Eliminar Imagen Actual
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Sinopsis / Descripción General</label>
+                        <textarea id="hexDescInput" class="w-full p-2 border border-slate-300 rounded h-40 focus:ring-2 focus:ring-emerald-500 outline-none resize-none text-sm" placeholder="Describe el ambiente, la historia principal..."></textarea>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: TABLAS -->
+                <div id="content-tables" class="tab-content hidden space-y-6">
+                    <p class="text-xs text-slate-500 mb-2">Crea tablas personalizadas (d6, d20, d66...). Añade el título y selecciona la cantidad de filas.</p>
+                    <div id="tablesListContainer" class="space-y-6"></div>
+                    <div class="bg-slate-50 border border-slate-200 p-3 rounded shadow-inner">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Añadir Nueva Tabla</label>
+                        <div class="flex flex-col gap-2">
+                            <input type="text" id="newTableName" class="w-full p-2 border border-slate-300 rounded outline-none text-sm focus:border-emerald-500" placeholder="Título (ej. Encuentros)">
+                            <div class="flex gap-2">
+                                <input type="text" id="newTableColumn" class="flex-1 p-2 border border-slate-300 rounded outline-none text-sm focus:border-emerald-500" placeholder="Columna (ej. Encuentro)">
+                                <input type="number" id="newTableRows" class="w-20 p-2 border border-slate-300 rounded outline-none text-sm focus:border-emerald-500" value="6" min="1" max="100" title="Número de filas">
+                                <button onclick="addCustomTable()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded transition-colors text-sm">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PESTAÑA: PERSONAJES (ENEMIGOS Y NPCs) -->
+                <div id="content-characters" class="tab-content hidden space-y-6">
+                    
+                    <!-- Sección Enemigos -->
+                    <div>
+                        <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1 flex justify-between items-center">
+                            Enemigos y Monstruos
+                            <button onclick="addEnemy()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir Enemigo</button>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 mb-3">Estadísticas completas, ataques y motivaciones de combate.</p>
+                        <div id="enemiesList" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Sección PNJs -->
+                    <div class="pt-4 border-t border-slate-300">
+                        <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1 flex justify-between items-center">
+                            Personajes No Jugadores (PNJ)
+                            <button onclick="addNPC()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir PNJ</button>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 mb-3">Enfocado en interacciones sociales, personalidad y secretos.</p>
+                        <div id="npcsList" class="space-y-4"></div>
+                    </div>
+
+                </div>
+
+                <!-- PESTAÑA: LUGARES -->
+                <div id="content-locations" class="tab-content hidden space-y-4">
+                    <p class="text-xs text-slate-500 mb-2">Añade los puntos de interés dentro de este hexágono, detallando pistas y peligros.</p>
+                    <div id="locationsList" class="space-y-4"></div>
+                    <button onclick="addLocation()" class="w-full py-2 border-2 border-dashed border-slate-300 text-slate-500 font-bold rounded hover:border-emerald-500 hover:text-emerald-600 transition-colors text-sm">
+                        + Añadir Lugar Clave
+                    </button>
+                </div>
+
+            </div>
+            
+            <!-- Botón Exportar PDF -->
+            <div class="p-4 border-t border-slate-200 bg-white">
+                <button onclick="exportAdventurePDF()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Exportar Aventura a PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLANTILLA OCULTA PARA EL PDF -->
+    <div id="pdf-export-wrapper">
+        <div id="pdf-export-container"></div>
+    </div>
+
+    <!-- MODAL DE MENSAJE ESPECIAL -->
+    <div id="copyModal" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-[100] backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh] mx-4">
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-lg">
+                <h3 class="font-bold text-slate-800 font-serif">Mensaje de Campaña</h3>
+                <button onclick="closeCopyModal()" class="text-slate-400 hover:text-red-500 font-bold px-2">X</button>
+            </div>
+            <div class="p-4 flex-1 overflow-hidden flex flex-col">
+                <p class="text-sm text-slate-500 mb-2">Copia el siguiente contenido:</p>
+                <textarea id="copyTextarea" class="w-full flex-1 min-h-[300px] p-4 border border-slate-300 rounded font-mono text-sm resize-none outline-none focus:border-emerald-500 bg-slate-50" readonly>[AQUÍ IRA TU MENSAJE GRANDE, REEMPLAZA ESTE TEXTO LUEGO EN EL CÓDIGO]</textarea>
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-lg flex justify-end gap-3">
+                <button onclick="closeCopyModal()" class="px-4 py-2 text-sm text-slate-600 font-medium hover:bg-slate-200 rounded transition-colors">Cerrar</button>
+                <button onclick="copyModalText()" id="btnCopyText" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded transition-colors flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Copiar Texto</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN DE TERRENOS Y MATEMÁTICAS ---
+        const TERRAINS = {
+            blank: { id: 'blank', name: 'Desconocido', color: '#ffffff', icon: '' },
+            forest: { id: 'forest', name: 'Bosque', color: '#a7f3d0', icon: '🌲' },
+            meadow: { id: 'meadow', name: 'Prado', color: '#fef08a', icon: '🌾' },
+            water: { id: 'water', name: 'Río / Agua', color: '#bae6fd', icon: '🌊' },
+            mountain: { id: 'mountain', name: 'Montaña', color: '#e5e7eb', icon: '⛰️' },
+            settlement: { id: 'settlement', name: 'Asentamiento', color: '#fbcfe8', icon: '🛖' },
+            ruins: { id: 'ruins', name: 'Ruinas', color: '#d1d5db', icon: '🏛️' },
+        };
+        const R = 45; 
+        const W = Math.sqrt(3) * R;
+        const H = 2 * R;
+        const hexPoints = [[0, -R], [W/2, -R/2], [W/2, R/2], [0, R], [-W/2, R/2], [-W/2, -R/2]].map(p => p.join(',')).join(' ');
+
+        function axialRound(fracQ, fracR) {
+            let fracS = -fracQ - fracR;
+            let q = Math.round(fracQ), r = Math.round(fracR), s = Math.round(fracS);
+            let qDiff = Math.abs(q - fracQ), rDiff = Math.abs(r - fracR), sDiff = Math.abs(s - fracS);
+            if (qDiff > rDiff && qDiff > sDiff) q = -r - s;
+            else if (rDiff > sDiff) r = -q - s;
+            else s = -q - r;
+            return { q, r };
+        }
+        function pixelToAxial(px, py) {
+            return axialRound((Math.sqrt(3)/3 * px - 1/3 * py) / R, (2/3 * py) / R);
+        }
+
+        // --- ESTADO GLOBAL ---
+        let mapTitle = 'Mi Principado de Mausritter';
+        let mapShape = 'flower', mapSize = 2, mapRows = 5; 
+        let hexes = {};
+        let selectedHexId = null;
+        let activeTool = 'cursor', isPainting = false;
+        let isDragging = false, dragTarget = null, dragOffsetX = 0, dragOffsetY = 0;
+
+        const svgEl = document.getElementById('hexSvg');
+        const mapArea = document.getElementById('mapArea');
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initToolsUI(); initListeners(); generateMap();
+        });
+
+        function initToolsUI() {
+            let toolsHTML = `
+                <button onclick="setActiveTool('cursor')" id="tool-cursor" class="tool-btn p-2 rounded border text-sm flex items-center gap-2 bg-emerald-100 border-emerald-500 font-bold col-span-1">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l7.07 17 2.51-7.39L21 11.07z"></path><path d="M13 13l6 6"></path></svg> Seleccionar
+                </button>
+                <button onclick="setActiveTool('move')" id="tool-move" class="tool-btn p-2 rounded border text-sm flex items-center gap-2 bg-white border-slate-200 hover:opacity-80 col-span-1">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 9 2 12 5 15"></polyline><polyline points="9 5 12 2 15 5"></polyline><polyline points="19 9 22 12 19 15"></polyline><polyline points="9 19 12 22 15 19"></polyline><line x1="2" y1="12" x2="22" y2="12"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg> Mover
+                </button>
+            `;
+            Object.values(TERRAINS).map(t => {
+                toolsHTML += `<button onclick="setActiveTool('${t.id}')" id="tool-${t.id}" class="tool-btn p-2 rounded border text-sm flex items-center gap-2 text-left hover:opacity-80" style="background-color: ${t.color}; border-color: #e2e8f0;"><span>${t.icon}</span> <span class="truncate">${t.name}</span></button>`;
+            });
+            document.getElementById('toolsContainer').innerHTML = toolsHTML;
+
+            let optionsHTML = '';
+            Object.values(TERRAINS).map(t => optionsHTML += `<option value="${t.id}">${t.icon} ${t.name}</option>`);
+            document.getElementById('hexTerrainSelect').innerHTML = optionsHTML;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'text-emerald-700');
+                btn.classList.add('border-transparent', 'text-slate-500');
+            });
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-slate-500');
+            document.getElementById(`tab-${tabName}`).classList.add('border-emerald-500', 'text-emerald-700');
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+        }
+
+        function initListeners() {
+            document.getElementById('mapTitleInput').addEventListener('input', e => { mapTitle = e.target.value; document.getElementById('displayTitle').innerText = mapTitle || 'Sin Título'; });
+            document.getElementById('mapShapeSelect').addEventListener('change', e => { mapShape = e.target.value; document.getElementById('mapRowsContainer').classList.toggle('hidden', mapShape !== 'rectangle'); document.getElementById('mapSizeLabel').innerText = mapShape === 'flower' ? 'Radio' : 'Columnas'; });
+            document.getElementById('mapSizeInput').addEventListener('input', e => mapSize = parseInt(e.target.value) || 1);
+            document.getElementById('mapRowsInput').addEventListener('input', e => mapRows = parseInt(e.target.value) || 1);
+            document.getElementById('generateBtn').addEventListener('click', generateMap);
+            document.getElementById('exportMapBtn').addEventListener('click', exportMapAsImage);
+
+            document.getElementById('hexTitleInput').addEventListener('input', e => updateData('title', e.target.value));
+            document.getElementById('hexDescInput').addEventListener('input', e => updateData('description', e.target.value));
+            document.getElementById('hexTerrainSelect').addEventListener('change', e => { updateData('terrain', e.target.value); renderMap(); });
+
+            document.getElementById('hexImageInput').addEventListener('change', e => {
+                if (!selectedHexId || !e.target.files.length) return;
+                const reader = new FileReader();
+                reader.onload = ev => { updateData('imageUrl', ev.target.result); updateInspectorUI(); renderMap(); };
+                reader.readAsDataURL(e.target.files[0]);
+            });
+            document.getElementById('removeImageBtn').addEventListener('click', () => {
+                updateData('imageUrl', null); document.getElementById('hexImageInput').value = ''; updateInspectorUI(); renderMap();
+            });
+
+            function getSVGPoint(evt) {
+                const pt = svgEl.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY;
+                return pt.matrixTransform(svgEl.getScreenCTM().inverse());
+            }
+
+            svgEl.addEventListener('mousedown', e => {
+                const g = e.target.closest('g.hex-group');
+                if (g) {
+                    const hexId = g.dataset.id;
+                    if (activeTool === 'move') {
+                        isDragging = true; dragTarget = hexes[hexId]; selectedHexId = hexId; updateInspectorUI();
+                        const pt = getSVGPoint(e); dragOffsetX = pt.x - dragTarget.x; dragOffsetY = pt.y - dragTarget.y;
+                        g.parentNode.appendChild(g);
+                    } else { isPainting = true; handleHexInteract(hexId); }
+                }
+            });
+            svgEl.addEventListener('mouseover', e => {
+                if (!isPainting || activeTool === 'move') return;
+                const g = e.target.closest('g.hex-group'); if (g) handleHexInteract(g.dataset.id);
+            });
+            window.addEventListener('mousemove', e => {
+                if (isDragging && dragTarget) {
+                    const pt = getSVGPoint(e); dragTarget.x = pt.x - dragOffsetX; dragTarget.y = pt.y - dragOffsetY;
+                    const g = document.querySelector(`g.hex-group[data-id="${dragTarget.id}"]`);
+                    if (g) g.setAttribute('transform', `translate(${dragTarget.x}, ${dragTarget.y})`);
+                }
+            });
+            function handleHexDrop() {
+                if (isDragging && dragTarget) {
+                    const { q: newQ, r: newR } = pixelToAxial(dragTarget.x, dragTarget.y);
+                    const isOccupied = Object.values(hexes).some(h => h.id !== dragTarget.id && h.q === newQ && h.r === newR);
+                    if (!isOccupied) { dragTarget.q = newQ; dragTarget.r = newR; }
+                    const exactCenter = getHexCenter(dragTarget.q, dragTarget.r);
+                    dragTarget.x = exactCenter.x; dragTarget.y = exactCenter.y;
+                    isDragging = false; dragTarget = null; renderMap(); 
+                }
+            }
+            window.addEventListener('mouseup', () => { handleHexDrop(); isPainting = false; });
+            mapArea.addEventListener('mouseleave', () => { handleHexDrop(); isPainting = false; });
+        }
+
+        function updateData(key, value) { if(selectedHexId) hexes[selectedHexId][key] = value; }
+
+        // --- TABLAS PERSONALIZADAS ---
+        function addCustomTable() {
+            if(!selectedHexId) return;
+            const titleInput = document.getElementById('newTableName');
+            const columnInput = document.getElementById('newTableColumn');
+            const rowsInput = document.getElementById('newTableRows');
+            
+            const newTable = {
+                id: 'table_' + Date.now(),
+                title: titleInput.value.trim() || 'Nueva Tabla',
+                columnName: columnInput.value.trim() || 'Resultado',
+                rows: Array(parseInt(rowsInput.value) || 6).fill('')
+            };
+            hexes[selectedHexId].customTables.push(newTable);
+            titleInput.value = ''; columnInput.value = ''; rowsInput.value = '6';
+            renderTablesUI();
+        }
+        function removeCustomTable(tableIndex) {
+            if(!selectedHexId) return; hexes[selectedHexId].customTables.splice(tableIndex, 1); renderTablesUI();
+        }
+        function updateTableRow(tableIndex, rowIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].rows[rowIndex] = value; }
+        function updateTableTitle(tableIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].title = value; }
+        function updateTableColumnName(tableIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].columnName = value; }
+
+        function renderTablesUI() {
+            const container = document.getElementById('tablesListContainer');
+            if(!selectedHexId) return container.innerHTML = '';
+            const tables = hexes[selectedHexId].customTables;
+            if (tables.length === 0) return container.innerHTML = `<div class="text-sm text-center text-slate-400 p-4 border border-dashed rounded">No hay tablas creadas.</div>`;
+
+            let html = '';
+            tables.forEach((table, tIndex) => {
+                html += `
+                <div class="relative bg-white border border-slate-300 rounded overflow-hidden shadow-sm">
+                    <button onclick="removeCustomTable(${tIndex})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold px-2 z-10">X</button>
+                    <div class="p-2 bg-slate-100 border-b border-slate-300 flex flex-col gap-1 pr-10">
+                         <input type="text" value="${table.title}" onchange="updateTableTitle(${tIndex}, this.value)" class="w-full font-serif font-black text-lg text-slate-800 bg-transparent outline-none focus:border-b-2 border-emerald-500" placeholder="Título (ej. Encuentros)">
+                         <div class="flex items-center gap-2">
+                             <span class="text-xs font-bold text-slate-500">Columna:</span>
+                             <input type="text" value="${table.columnName}" onchange="updateTableColumnName(${tIndex}, this.value)" class="flex-1 font-bold text-xs text-slate-700 bg-transparent outline-none border-b border-dashed border-slate-400 focus:border-emerald-500" placeholder="Nombre Columna">
+                         </div>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto">`;
+                
+                table.rows.forEach((rowVal, rIndex) => {
+                    let visualIndex = rIndex + 1;
+                    if(table.rows.length === 36) visualIndex = `${Math.floor(rIndex / 6) + 1}${(rIndex % 6) + 1}`;
+                    html += `
+                        <div class="flex border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                            <div class="w-10 flex items-center justify-center bg-slate-50 font-bold text-slate-400 border-r border-slate-100 shrink-0 text-xs">${visualIndex}</div>
+                            <input type="text" value="${rowVal}" onchange="updateTableRow(${tIndex}, ${rIndex}, this.value)" class="w-full p-2 outline-none focus:bg-emerald-50 text-sm" placeholder="...">
+                        </div>`;
+                });
+                html += `</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- ENEMIGOS Y MONSTRUOS ---
+        function addEnemy() {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].enemies.push({ 
+                name: 'Nuevo Enemigo', type: '', appearance: '', behavior: '', motivation: '', 
+                hp: 3, str: 10, dex: 10, wil: 10, armor: 0, attack: '', special: '', weakness: '', imageUrl: null 
+            });
+            renderEnemiesUI();
+        }
+        function removeEnemy(index) { if(!selectedHexId) return; hexes[selectedHexId].enemies.splice(index, 1); renderEnemiesUI(); }
+        
+        function uploadEnemyImage(event, index) {
+            if (!selectedHexId || !event.target.files.length) return;
+            const r = new FileReader(); r.onload = (e) => { hexes[selectedHexId].enemies[index].imageUrl = e.target.result; renderEnemiesUI(); };
+            r.readAsDataURL(event.target.files[0]);
+        }
+        function removeEnemyImage(index) { if (!selectedHexId) return; hexes[selectedHexId].enemies[index].imageUrl = null; renderEnemiesUI(); }
+
+        function renderEnemiesUI() {
+            const list = document.getElementById('enemiesList');
+            if(!selectedHexId) return list.innerHTML = '';
+            
+            list.innerHTML = hexes[selectedHexId].enemies.map((enemy, i) => `
+                <div class="bg-white border border-slate-200 p-3 rounded text-sm relative shadow-sm">
+                    <button onclick="removeEnemy(${i})" class="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold px-2">X</button>
+                    
+                    <input type="text" value="${enemy.name}" onchange="hexes['${selectedHexId}'].enemies[${i}].name = this.value" class="w-[85%] font-serif font-bold text-lg mb-2 p-1 border border-transparent hover:border-slate-300 rounded focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Nombre">
+                    
+                    <div class="mb-2 p-2 border border-slate-200 rounded bg-slate-50">
+                        <label class="text-[10px] text-slate-500 font-bold block mb-1">Imagen (Opcional)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="file" accept="image/*" onchange="uploadEnemyImage(event, ${i})" class="w-full p-1 border border-slate-300 rounded text-xs bg-white outline-none">
+                            ${enemy.imageUrl ? `<button onclick="removeEnemyImage(${i})" class="text-xs text-red-500 font-bold">Quitar</button>` : ''}
+                        </div>
+                        ${enemy.imageUrl ? `<img src="${enemy.imageUrl}" class="mt-2 h-16 object-contain border border-slate-200 rounded p-1 bg-white">` : ''}
+                    </div>
+
+                    <div class="space-y-2 mb-3">
+                        <input type="text" value="${enemy.type}" onchange="hexes['${selectedHexId}'].enemies[${i}].type = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Tipo de criatura (ej. Insecto mutado)">
+                        <textarea onchange="hexes['${selectedHexId}'].enemies[${i}].appearance = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500 h-12 resize-none" placeholder="Apariencia...">${enemy.appearance}</textarea>
+                        <textarea onchange="hexes['${selectedHexId}'].enemies[${i}].behavior = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500 h-12 resize-none" placeholder="Comportamiento...">${enemy.behavior}</textarea>
+                        <input type="text" value="${enemy.motivation}" onchange="hexes['${selectedHexId}'].enemies[${i}].motivation = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Motivación (ej. Drenar energía)">
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-2 mb-3 bg-slate-50 p-2 rounded border border-slate-200">
+                        <div><label class="text-[10px] text-slate-500 font-bold block text-center">PG</label><input type="number" value="${enemy.hp}" onchange="hexes['${selectedHexId}'].enemies[${i}].hp = this.value" class="w-full p-1 border rounded text-center"></div>
+                        <div><label class="text-[10px] text-slate-500 font-bold block text-center">FUE</label><input type="number" value="${enemy.str}" onchange="hexes['${selectedHexId}'].enemies[${i}].str = this.value" class="w-full p-1 border rounded text-center"></div>
+                        <div><label class="text-[10px] text-slate-500 font-bold block text-center">DES</label><input type="number" value="${enemy.dex}" onchange="hexes['${selectedHexId}'].enemies[${i}].dex = this.value" class="w-full p-1 border rounded text-center"></div>
+                        <div><label class="text-[10px] text-slate-500 font-bold block text-center">VOL</label><input type="number" value="${enemy.wil}" onchange="hexes['${selectedHexId}'].enemies[${i}].wil = this.value" class="w-full p-1 border rounded text-center"></div>
+                        <div><label class="text-[10px] text-emerald-600 font-bold block text-center">ARM</label><input type="number" value="${enemy.armor}" onchange="hexes['${selectedHexId}'].enemies[${i}].armor = this.value" class="w-full p-1 border border-emerald-300 bg-emerald-50 rounded text-center"></div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <input type="text" value="${enemy.attack}" onchange="hexes['${selectedHexId}'].enemies[${i}].attack = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Ataque (ej. Drenar (d6 daño))">
+                        <textarea onchange="hexes['${selectedHexId}'].enemies[${i}].special = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500 h-12 resize-none" placeholder="Especial / Magia...">${enemy.special}</textarea>
+                        <input type="text" value="${enemy.weakness}" onchange="hexes['${selectedHexId}'].enemies[${i}].weakness = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Debilidad (ej. El fuego las hace estallar)">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- PNJs ---
+        function addNPC() {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].npcs.push({ name: 'Nuevo PNJ', appearance: '', personality: '', motivation: '', secret: '', imageUrl: null });
+            renderNPCsUI();
+        }
+        function removeNPC(index) { if(!selectedHexId) return; hexes[selectedHexId].npcs.splice(index, 1); renderNPCsUI(); }
+
+        function uploadNPCImage(event, index) {
+            if (!selectedHexId || !event.target.files.length) return;
+            const r = new FileReader(); r.onload = (e) => { hexes[selectedHexId].npcs[index].imageUrl = e.target.result; renderNPCsUI(); };
+            r.readAsDataURL(event.target.files[0]);
+        }
+        function removeNPCImage(index) { if (!selectedHexId) return; hexes[selectedHexId].npcs[index].imageUrl = null; renderNPCsUI(); }
+
+        function renderNPCsUI() {
+            const list = document.getElementById('npcsList');
+            if(!selectedHexId) return list.innerHTML = '';
+            
+            list.innerHTML = hexes[selectedHexId].npcs.map((npc, i) => `
+                <div class="bg-white border border-slate-200 p-3 rounded text-sm relative shadow-sm">
+                    <button onclick="removeNPC(${i})" class="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold px-2">X</button>
+                    
+                    <input type="text" value="${npc.name}" onchange="hexes['${selectedHexId}'].npcs[${i}].name = this.value" class="w-[85%] font-serif font-bold text-lg mb-2 p-1 border border-transparent hover:border-slate-300 rounded focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Nombre (ej. Hermana Minutero)">
+                    
+                    <div class="mb-2 p-2 border border-slate-200 rounded bg-slate-50">
+                        <label class="text-[10px] text-slate-500 font-bold block mb-1">Imagen (Opcional)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="file" accept="image/*" onchange="uploadNPCImage(event, ${i})" class="w-full p-1 border border-slate-300 rounded text-xs bg-white outline-none">
+                            ${npc.imageUrl ? `<button onclick="removeNPCImage(${i})" class="text-xs text-red-500 font-bold">Quitar</button>` : ''}
+                        </div>
+                        ${npc.imageUrl ? `<img src="${npc.imageUrl}" class="mt-2 h-16 object-contain border border-slate-200 rounded p-1 bg-white">` : ''}
+                    </div>
+
+                    <div class="space-y-2">
+                        <textarea onchange="hexes['${selectedHexId}'].npcs[${i}].appearance = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500 h-12 resize-none" placeholder="Apariencia...">${npc.appearance}</textarea>
+                        <input type="text" value="${npc.personality}" onchange="hexes['${selectedHexId}'].npcs[${i}].personality = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Personalidad (ej. Fría, calculadora)">
+                        <input type="text" value="${npc.motivation}" onchange="hexes['${selectedHexId}'].npcs[${i}].motivation = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Motivación (ej. Capturar especímenes)">
+                        <textarea onchange="hexes['${selectedHexId}'].npcs[${i}].secret = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500 h-12 resize-none" placeholder="Secreto (ej. En realidad está aterrorizada... )">${npc.secret}</textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- LUGARES ---
+        function addLocation() {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].locations.push({ name: 'Nuevo Lugar', description: '', interesting: '', danger: '', clue: '' });
+            renderLocationsUI();
+        }
+
+        function removeLocation(index) {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].locations.splice(index, 1);
+            renderLocationsUI();
+        }
+
+        function renderLocationsUI() {
+            const list = document.getElementById('locationsList');
+            if(!selectedHexId) return list.innerHTML = '';
+            
+            list.innerHTML = hexes[selectedHexId].locations.map((loc, i) => `
+                <div class="bg-white border border-slate-200 p-3 rounded text-sm relative shadow-sm">
+                    <button onclick="removeLocation(${i})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold px-2">X</button>
+                    <input type="text" value="${loc.name}" onchange="hexes['${selectedHexId}'].locations[${i}].name = this.value" class="w-[85%] font-serif font-bold text-lg mb-3 p-1.5 border border-transparent rounded outline-none focus:border-slate-300 focus:bg-white" placeholder="Nombre del Lugar">
+                    
+                    <div class="space-y-2">
+                        <textarea onchange="hexes['${selectedHexId}'].locations[${i}].description = this.value" class="w-full p-1.5 border rounded resize-none h-16 outline-none focus:border-emerald-500" placeholder="Descripción general...">${loc.description}</textarea>
+                        <input type="text" value="${loc.interesting}" onchange="hexes['${selectedHexId}'].locations[${i}].interesting = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Algo interesante (ej. Tres esqueletos...)">
+                        <input type="text" value="${loc.danger}" onchange="hexes['${selectedHexId}'].locations[${i}].danger = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Un peligro (ej. Polvo de cristal afilado...)">
+                        <input type="text" value="${loc.clue}" onchange="hexes['${selectedHexId}'].locations[${i}].clue = this.value" class="w-full p-1.5 border rounded outline-none focus:border-emerald-500" placeholder="Una pista (ej. Marcas de garras...)">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- CORE MAPA ---
+        function setActiveTool(toolId) {
+            activeTool = toolId;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-emerald-500', 'font-bold', 'bg-emerald-100', 'border-emerald-500');
+                if(btn.id !== 'tool-cursor' && btn.id !== 'tool-move') btn.style.borderColor = '#e2e8f0';
+            });
+
+            const activeBtn = document.getElementById(`tool-${toolId}`);
+            if (toolId === 'cursor' || toolId === 'move') activeBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'font-bold');
+            else { activeBtn.classList.add('ring-2', 'ring-emerald-500', 'font-bold'); activeBtn.style.borderColor = '#10b981'; }
+        }
+
+        function generateMap() {
+            hexes = {};
+            let counter = 1;
+            if (mapShape === 'flower') {
+                for (let q = -mapSize; q <= mapSize; q++) {
+                    let r1 = Math.max(-mapSize, -q - mapSize), r2 = Math.min(mapSize, -q + mapSize);
+                    for (let r = r1; r <= r2; r++) hexes[`${q},${r}`] = createHexObj(`${q},${r}`, q, r, counter++);
+                }
+            } else if (mapShape === 'rectangle') {
+                for (let row = 0; row < mapRows; row++) {
+                    for (let col = 0; col < mapSize; col++) {
+                        let q = col - Math.floor(row / 2), r = row;
+                        hexes[`${q},${r}`] = createHexObj(`${q},${r}`, q, r, counter++);
+                    }
+                }
+            }
+            document.getElementById('hexCount').innerText = `${Object.keys(hexes).length} Hexágonos`;
+            selectedHexId = null; updateInspectorUI(); renderMap();
+        }
+
+        function createHexObj(id, q, r, label) {
+            const center = { x: W * (q + r / 2), y: H * 0.75 * r };
+            return {
+                id, q, r, label, x: center.x, y: center.y,
+                terrain: 'blank', imageUrl: null,
+                title: `Aventura en Hexágono ${label}`, description: '',
+                customTables: [
+                    { id: 't1', title: 'Ganchos', columnName: 'Gancho', rows: ['','','','','',''] },
+                    { id: 't2', title: 'Encuentros', columnName: 'Encuentro', rows: ['','','','','',''] },
+                    { id: 't3', title: 'Tesoros', columnName: 'Tesoro', rows: ['','','','','',''] }
+                ],
+                enemies: [], npcs: [], locations: []
+            };
+        }
+
+        function handleHexInteract(id) {
+            if (activeTool !== 'cursor' && activeTool !== 'move') { hexes[id].terrain = activeTool; renderMap(); }
+            selectedHexId = id; updateInspectorUI(); renderMap();
+        }
+
+        function updateInspectorUI() {
+            const noSel = document.getElementById('noSelectionPanel'), insp = document.getElementById('inspectorPanel');
+            if (!selectedHexId || !hexes[selectedHexId]) { noSel.classList.remove('hidden'); insp.classList.add('hidden'); return; }
+
+            noSel.classList.add('hidden'); insp.classList.remove('hidden');
+            const hex = hexes[selectedHexId];
+            
+            document.getElementById('hexIdLabel').innerText = hex.label;
+            document.getElementById('inspectorHeaderTitle').innerText = hex.title || `Hexágono ${hex.label}`;
+            document.getElementById('hexTitleInput').value = hex.title;
+            document.getElementById('hexTerrainSelect').value = hex.terrain;
+            document.getElementById('hexDescInput').value = hex.description;
+            if (hex.imageUrl) document.getElementById('removeImageBtn').classList.remove('hidden');
+            else { document.getElementById('removeImageBtn').classList.add('hidden'); document.getElementById('hexImageInput').value = ''; }
+
+            renderTablesUI(); renderEnemiesUI(); renderNPCsUI(); renderLocationsUI();
+        }
+
+        function renderMap() {
+            const hexArray = Object.values(hexes);
+            if (hexArray.length === 0) return;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            let svgHTML = `<defs><clipPath id="hex-clip"><polygon points="${hexPoints}"></polygon></clipPath></defs>`;
+
+            hexArray.forEach(hex => {
+                minX = Math.min(minX, hex.x); maxX = Math.max(maxX, hex.x);
+                minY = Math.min(minY, hex.y); maxY = Math.max(maxY, hex.y);
+                const isSelected = selectedHexId === hex.id, t = TERRAINS[hex.terrain];
+
+                svgHTML += `<g data-id="${hex.id}" class="hex-group cursor-pointer transition-transform" transform="translate(${hex.x}, ${hex.y})">
+                            <polygon points="${hexPoints}" fill="${t.color}" stroke="${isSelected ? '#10b981' : '#475569'}" stroke-width="${isSelected ? '4' : '1.5'}" stroke-linejoin="round" class="hover:brightness-95"></polygon>`;
+
+                if (hex.imageUrl) svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
+                svgHTML += `<text x="0" y="-15" text-anchor="middle" class="text-[12px] font-bold pointer-events-none ${hex.imageUrl ? 'fill-white' : 'fill-slate-500 opacity-50'} font-serif" style="${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
+                if (t.icon && !hex.imageUrl) svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" class="text-[20px] pointer-events-none">${t.icon}</text>`;
+                svgHTML += `</g>`;
+            });
+            const pad = 60;
+            svgEl.setAttribute('viewBox', `${minX - W/2 - pad} ${minY - H/2 - pad} ${(maxX - minX) + W + pad * 2} ${(maxY - minY) + H + pad * 2}`); 
+            svgEl.innerHTML = svgHTML;
+        }
+
+        function exportMapAsImage() {
+            const svgData = new XMLSerializer().serializeToString(svgEl);
+            const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d"); const img = new Image();
+            const viewBox = svgEl.getAttribute('viewBox').split(' ').map(parseFloat);
+            canvas.width = viewBox[2]; canvas.height = viewBox[3];
+            img.onload = () => {
+                ctx.fillStyle = "#f8fafc"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0);
+                const link = document.createElement("a"); link.download = `${mapTitle.replace(/\s+/g, '_')}_Mapa.png`;
+                link.href = canvas.toDataURL("image/png"); link.click();
+            };
+            img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+        }
+
+        // --- EXPORTACIÓN A PDF (Mejorada para no mostrar vacíos) ---
+        function exportAdventurePDF() {
+            if(!selectedHexId) return;
+            const btn = event.currentTarget, originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Generando PDF...'; btn.disabled = true;
+            const hex = hexes[selectedHexId];
+            const container = document.getElementById('pdf-export-container');
+            
+            const renderPDFCustomTables = (tablesArray) => {
+                let html = '';
+                tablesArray.forEach(table => {
+                    if(table.rows.every(row => !row.trim())) return;
+                    let diceType = 'd' + table.rows.length;
+                    if(table.rows.length === 36) diceType = 'd66';
+                    
+                    html += `<div class="pdf-table-main-title">${table.title}</div>
+                    <table class="pdf-rpg-table"><thead><tr><th>${diceType}</th><th>${table.columnName || 'Resultado'}</th></tr></thead><tbody>`;
+                    table.rows.forEach((rowContent, idx) => {
+                        if(rowContent.trim()){
+                            let vIndex = idx + 1;
+                            if(table.rows.length === 36) vIndex = `${Math.floor(idx / 6) + 1}${(idx % 6) + 1}`;
+                            html += `<tr><td>${vIndex}</td><td>${rowContent}</td></tr>`;
+                        }
+                    });
+                    html += `</tbody></table>`;
+                });
+                return html;
+            };
+
+            let html = `
+                <div class="pdf-page">
+                    <div class="pdf-title">${hex.title || `Aventura en Hexágono ${hex.label}`}</div>
+                    <div style="display: flex; gap: 30px;">
+                        <!-- Columna Izquierda -->
+                        <div style="flex: 1;">
+            `;
+            if(hex.imageUrl) html += `<div style="margin-bottom: 20px; border: 2px solid #334155; padding: 5px;"><img src="${hex.imageUrl}" style="width: 100%; object-fit: cover;"></div>`;
+            if(hex.description) html += `<div class="pdf-section-title">Sinopsis</div><div class="pdf-text">${hex.description.replace(/\n/g, '<br>')}</div>`;
+            html += renderPDFCustomTables(hex.customTables);
+            html += `</div><!-- Fin Columna Izquierda -->
+                     <!-- Columna Derecha -->
+                     <div style="flex: 1;">`;
+
+            // Renderizar Enemigos
+            if(hex.enemies.length > 0) {
+                let hasValidEnemies = false;
+                let enemiesHtml = `<div class="pdf-section-title">Enemigos y Monstruos</div>`;
+                hex.enemies.forEach(en => {
+                    if(!en.name.trim() && !en.type.trim() && !en.attack.trim() && !en.appearance.trim()) return; // Ignorar totalmente vacíos
+                    hasValidEnemies = true;
+                    
+                    const imgHtml = en.imageUrl ? `<div style="margin-bottom: 10px; text-align: center;"><img src="${en.imageUrl}" style="max-height: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; padding: 2px; width: 100%;"></div>` : '';
+                    const armor = en.armor > 0 ? `, Armadura ${en.armor}` : '';
+                    
+                    enemiesHtml += `<div class="pdf-block">${imgHtml}<div class="pdf-block-title">${en.name}</div>`;
+                    if(en.type) enemiesHtml += `<div class="pdf-field"><b>Tipo de criatura:</b> ${en.type}</div>`;
+                    if(en.appearance) enemiesHtml += `<div class="pdf-field"><b>Apariencia:</b> ${en.appearance.replace(/\n/g, '<br>')}</div>`;
+                    if(en.behavior) enemiesHtml += `<div class="pdf-field"><b>Comportamiento:</b> ${en.behavior.replace(/\n/g, '<br>')}</div>`;
+                    if(en.motivation) enemiesHtml += `<div class="pdf-field"><b>Motivación:</b> ${en.motivation}</div>`;
+                    
+                    enemiesHtml += `<div class="pdf-stats">${en.hp || '-'} PG, FUE ${en.str || '-'}, DES ${en.dex || '-'}, VOL ${en.wil || '-'}${armor}</div>`;
+                    
+                    if(en.attack) enemiesHtml += `<div class="pdf-field"><b>Ataque:</b> ${en.attack}</div>`;
+                    if(en.special) enemiesHtml += `<div class="pdf-field" style="color:#047857;"><b>Especial:</b> ${en.special.replace(/\n/g, '<br>')}</div>`;
+                    if(en.weakness) enemiesHtml += `<div class="pdf-field"><b>Debilidad:</b> ${en.weakness}</div>`;
+                    enemiesHtml += `</div>`;
+                });
+                if(hasValidEnemies) html += enemiesHtml;
+            }
+
+            // Renderizar PNJs
+            if(hex.npcs.length > 0) {
+                let hasValidNpcs = false;
+                let npcsHtml = `<div class="pdf-section-title">Personajes No Jugadores</div>`;
+                hex.npcs.forEach(npc => {
+                    if(!npc.name.trim() && !npc.appearance.trim() && !npc.personality.trim()) return;
+                    hasValidNpcs = true;
+                    
+                    const imgHtml = npc.imageUrl ? `<div style="margin-bottom: 10px; text-align: center;"><img src="${npc.imageUrl}" style="max-height: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; padding: 2px; width: 100%;"></div>` : '';
+                    npcsHtml += `<div class="pdf-block">${imgHtml}<div class="pdf-block-title">${npc.name}</div>`;
+                    
+                    if(npc.appearance) npcsHtml += `<div class="pdf-field"><b>Apariencia:</b> ${npc.appearance.replace(/\n/g, '<br>')}</div>`;
+                    if(npc.personality) npcsHtml += `<div class="pdf-field"><b>Personalidad:</b> ${npc.personality}</div>`;
+                    if(npc.motivation) npcsHtml += `<div class="pdf-field"><b>Motivación:</b> ${npc.motivation}</div>`;
+                    if(npc.secret) npcsHtml += `<div class="pdf-field" style="color:#475569; font-style:italic;"><b>Secreto:</b> ${npc.secret.replace(/\n/g, '<br>')}</div>`;
+                    npcsHtml += `</div>`;
+                });
+                if(hasValidNpcs) html += npcsHtml;
+            }
+
+            // Renderizar Lugares
+            if(hex.locations.length > 0) {
+                let hasValidLocs = false;
+                let locsHtml = `<div class="pdf-section-title">Lugares de Interés</div>`;
+                hex.locations.forEach((loc, i) => {
+                    if(!loc.name.trim() && !loc.description.trim()) return;
+                    hasValidLocs = true;
+                    
+                    locsHtml += `<div style="margin-bottom: 15px; page-break-inside: avoid;">
+                                <span style="font-family: 'Merriweather', serif; font-weight: bold; font-size: 15px; color: #1e293b;">${i+1}. ${loc.name}</span>`;
+                    if(loc.description) locsHtml += `<div class="pdf-text" style="margin-top: 5px; margin-bottom: 4px;"><b>Descripción:</b> ${loc.description.replace(/\n/g, '<br>')}</div>`;
+                    if(loc.interesting) locsHtml += `<div class="pdf-field"><b>Algo interesante:</b> ${loc.interesting}</div>`;
+                    if(loc.danger) locsHtml += `<div class="pdf-field" style="color:#b91c1c;"><b>Un peligro:</b> ${loc.danger}</div>`;
+                    if(loc.clue) locsHtml += `<div class="pdf-field" style="color:#0369a1;"><b>Una pista:</b> ${loc.clue}</div>`;
+                    locsHtml += `</div>`;
+                });
+                if(hasValidLocs) html += locsHtml;
+            }
+
+            html += `
+                        </div><!-- Fin Columna Derecha -->
+                    </div><!-- Fin Flex -->
+                    <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                        Generado con Maquetador Mausritter - Hexágono ${hex.label}
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+
+            setTimeout(() => {
+                const opt = {
+                    margin:       [0.5, 0.5, 0.5, 0.5],
+                    filename:     `Hex${hex.label}_${(hex.title || 'Aventura').replace(/\s+/g, '_')}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(container).save().then(() => {
+                    container.innerHTML = ''; btn.innerHTML = originalText; btn.disabled = false;
+                });
+            }, 300);
+        }
+
+        function openCopyModal() { document.getElementById('copyModal').classList.replace('hidden', 'flex'); }
+        function closeCopyModal() { document.getElementById('copyModal').classList.replace('flex', 'hidden'); }
+        function copyModalText() {
+            const textarea = document.getElementById('copyTextarea'); textarea.select(); document.execCommand('copy');
+            const btn = document.getElementById('btnCopyText'), span = btn.querySelector('span'), originalText = span.innerText;
+            span.innerText = '¡Copiado!'; btn.classList.replace('bg-emerald-600', 'bg-slate-800'); btn.classList.replace('hover:bg-emerald-700', 'hover:bg-slate-900');
+            setTimeout(() => { span.innerText = originalText; btn.classList.replace('bg-slate-800', 'bg-emerald-600'); btn.classList.replace('hover:bg-slate-900', 'hover:bg-emerald-700'); }, 2000);
+        }
+    </script>
+</body>
+</html>

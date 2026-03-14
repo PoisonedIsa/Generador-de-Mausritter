@@ -6,8 +6,6 @@
     <title>Maquetador Mausritter y Creador de Aventuras</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- HTML2PDF para exportar a PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
@@ -28,69 +26,6 @@
         }
         .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
         .rich-text-content h4 { font-weight: bold; font-size: 1.1em; margin-top: 0.5rem; margin-bottom: 0.25rem; }
-
-        /* --- ESTILOS ESPECÍFICOS PARA LA PLANTILLA PDF --- */
-        #pdf-export-wrapper {
-            position: absolute;
-            left: -9999px;
-            top: 0;
-            width: 800px; /* Ancho de renderizado óptimo para A4 */
-        }
-        #pdf-export-container {
-            background: #fdfbf7; /* Tono papel antiguo */
-            color: black;
-            text-align: left;
-            padding: 10px;
-        }
-
-        /* --- CLASES DE FUENTES DINÁMICAS PARA PDF --- */
-        /* Opción 1: Clásica (Merriweather Títulos / Inter Texto) */
-        .pdf-font-classic .pdf-title, .pdf-font-classic .pdf-section-title, .pdf-font-classic .pdf-table-main-title, .pdf-font-classic .pdf-rpg-table th, .pdf-font-classic .pdf-block-title { font-family: 'Merriweather', serif; }
-        .pdf-font-classic h4 { font-family: 'Merriweather', serif; }
-        .pdf-font-classic .pdf-text, .pdf-font-classic .pdf-rpg-table td, .pdf-font-classic .pdf-field, .pdf-font-classic .pdf-stats { font-family: 'Inter', sans-serif; }
-
-        /* Opción 2: Antigua (Crimson Text para todo) */
-        .pdf-font-antique { font-family: 'Crimson Text', serif; }
-        .pdf-font-antique .pdf-title, .pdf-font-antique .pdf-section-title, .pdf-font-antique .pdf-table-main-title, .pdf-font-antique .pdf-rpg-table th, .pdf-font-antique .pdf-block-title { font-family: 'Crimson Text', serif; font-weight: 700; }
-        .pdf-font-antique h4 { font-family: 'Crimson Text', serif; font-weight: 700; }
-        
-        /* Opción 3: Mecanografiada (Courier Prime para todo) */
-        .pdf-font-typewriter { font-family: 'Courier Prime', monospace; }
-        .pdf-font-typewriter .pdf-title, .pdf-font-typewriter .pdf-section-title, .pdf-font-typewriter .pdf-table-main-title, .pdf-font-typewriter .pdf-rpg-table th, .pdf-font-typewriter .pdf-block-title { font-family: 'Courier Prime', monospace; font-weight: 700; letter-spacing: -0.5px; }
-        .pdf-font-typewriter h4 { font-family: 'Courier Prime', monospace; font-weight: 700; }
-
-
-        /* Reglas de texto enriquecido para el PDF */
-        #pdf-export-container ul { list-style-type: disc; margin-left: 24px; margin-top: 4px; margin-bottom: 4px; }
-        #pdf-export-container h4 { font-size: 15px; font-weight: bold; margin-top: 10px; margin-bottom: 4px; color: #111827; }
-        #pdf-export-container p, #pdf-export-container div { margin-bottom: 4px; }
-
-        .pdf-title { font-size: 32px; font-weight: 900; border-bottom: 2px solid #1a202c; margin-bottom: 20px; padding-bottom: 10px;}
-        .pdf-section-title { font-size: 18px; font-weight: 700; border-bottom: 1px solid #cbd5e1; margin-top: 25px; margin-bottom: 12px; padding-bottom: 5px; page-break-after: avoid; page-break-inside: avoid; clear: both;}
-        .pdf-text { font-size: 14px; line-height: 1.6; margin-bottom: 15px; page-break-inside: avoid;}
-        
-        /* SISTEMA MASONRY PARA PDF (Evita espacios vacíos y respeta cortes) */
-        .pdf-masonry { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-bottom: 10px;}
-        .pdf-masonry-item { width: calc(50% - 10px); page-break-inside: avoid; break-inside: avoid; margin-bottom: 5px;}
-        .pdf-full-width-item { width: 100%; page-break-inside: avoid; break-inside: avoid; margin-bottom: 15px;}
-
-        /* Estilos para Tablas OSR en PDF */
-        .pdf-table-main-title { font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #111827; }
-        .pdf-table-desc { font-size: 12.5px; color: #475569; margin-bottom: 8px; line-height: 1.4; }
-        .pdf-rpg-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 12.5px; border-bottom: 2px solid #1f2937; border-top: 2px solid #1f2937;}
-        .pdf-rpg-table th { background-color: #f1f5f9; padding: 4px 6px; text-align: left; font-size: 13.5px; border-bottom: 1px solid #94a3b8;}
-        .pdf-rpg-table td { padding: 4px 6px; vertical-align: top;}
-        .pdf-rpg-table tr:nth-child(even) { background-color: #f8fafc; }
-        .pdf-rpg-table th:first-child { width: 35px; text-align: center; font-weight: 900; }
-        .pdf-rpg-table td:first-child { font-weight: bold; width: 35px; text-align: center; }
-        .pdf-table-footer { font-size: 11px; color: #64748b; line-height: 1.3; }
-        
-        /* Bloques en PDF */
-        .pdf-block { border: 1px solid #cbd5e1; padding: 12px; background: white; border-radius: 4px; box-shadow: 2px 2px 0px #cbd5e1;}
-        .pdf-block-title { font-weight: bold; font-size: 16px; margin-bottom: 6px; color: #0f172a;}
-        .pdf-stats { font-size: 12px; color: #334155; margin-bottom: 8px; font-weight: bold; background: #f1f5f9; padding: 4px; border-radius: 2px;}
-        .pdf-field { font-size: 13px; margin-bottom: 4px; line-height: 1.4; }
-        .pdf-field b { color: #1e293b; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
@@ -223,7 +158,6 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Sinopsis / Descripción General</label>
-                        <!-- Mini Editor WYSIWYG para Sinopsis -->
                         <div class="border border-slate-300 rounded focus-within:border-emerald-500 overflow-hidden flex flex-col bg-white shadow-sm">
                             <div class="bg-slate-100 border-b border-slate-300 flex gap-1 p-1 items-center">
                                 <button type="button" onclick="document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs" title="Negrita">B</button>
@@ -297,22 +231,17 @@
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-slate-600 font-medium">Estilo de fuente:</span>
                     <select id="pdfFontSelect" class="p-1 border border-slate-300 rounded outline-none focus:border-emerald-500 bg-slate-50">
-                        <option value="pdf-font-classic">Clásica (Merriweather)</option>
-                        <option value="pdf-font-antique">Antigua (Crimson Text)</option>
-                        <option value="pdf-font-typewriter">Mecanografiada (Courier)</option>
+                        <option value="font-family: 'Merriweather', serif;" data-text="font-family: 'Inter', sans-serif;">Clásica (Merriweather)</option>
+                        <option value="font-family: 'Crimson Text', serif;" data-text="font-family: 'Crimson Text', serif;">Antigua (Crimson Text)</option>
+                        <option value="font-family: 'Courier Prime', monospace;" data-text="font-family: 'Courier Prime', monospace;">Mecanografiada (Courier)</option>
                     </select>
                 </div>
-                <button onclick="exportAdventurePDF()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Exportar Aventura a PDF
+                <button onclick="exportAdventurePrint()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Imprimir / Guardar como PDF
                 </button>
             </div>
         </div>
-    </div>
-
-    <!-- PLANTILLA OCULTA PARA EL PDF -->
-    <div id="pdf-export-wrapper">
-        <div id="pdf-export-container"></div>
     </div>
 
     <!-- MODAL DE MENSAJE ESPECIAL -->
@@ -820,150 +749,192 @@
             img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
         }
 
-        // --- EXPORTACIÓN A PDF MEJORADA (Mampostería y Cuidado de Cortes) ---
-        function exportAdventurePDF() {
+
+        // --- IMPRESIÓN NATIVA / EXPORTAR A PDF (Texto Real, 2 Columnas) ---
+        function exportAdventurePrint() {
             if(!selectedHexId) return;
-            const btn = event.currentTarget, originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ Generando PDF...'; btn.disabled = true;
             const hex = hexes[selectedHexId];
-            const container = document.getElementById('pdf-export-container');
-            const selectedFontClass = document.getElementById('pdfFontSelect').value;
             
-            // Aplicar la clase de fuente seleccionada al contenedor principal
-            container.className = selectedFontClass;
+            // Obtener familia de fuentes elegida
+            const selectEl = document.getElementById('pdfFontSelect');
+            const titleFont = selectEl.value; // ej: font-family: 'Merriweather', serif;
+            const textFont = selectEl.options[selectEl.selectedIndex].getAttribute('data-text'); 
 
-            // Función para renderizar tablas en sistema Masonry
-            const renderPDFCustomTables = (tablesArray) => {
-                let html = '<div class="pdf-masonry">';
-                let hasTables = false;
-                tablesArray.forEach(table => {
-                    if(table.rows.every(row => !row.trim())) return;
-                    hasTables = true;
-                    let diceType = 'd' + table.rows.length;
-                    if(table.rows.length === 36) diceType = 'd66';
+            let htmlContent = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>${hex.title || `Aventura Hexágono ${hex.label}`}</title>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+                <style>
+                    /* Estilos base para la impresión OSR */
+                    @page { size: A4; margin: 15mm; }
+                    body { ${textFont} color: #111827; line-height: 1.4; font-size: 10pt; background: #fff; margin: 0; padding: 0; }
                     
-                    html += `<div class="pdf-masonry-item">`;
-                    html += `<div class="pdf-table-main-title">${table.title}</div>`;
-                    if (hasText(table.description)) html += `<div class="pdf-table-desc">${table.description}</div>`;
+                    /* Tipografía para Títulos */
+                    h1, h2, h3, .title-font { ${titleFont} }
                     
-                    html += `<table class="pdf-rpg-table"><thead><tr><th>${diceType}</th><th>${table.columnName || 'Resultado'}</th></tr></thead><tbody>`;
-                    table.rows.forEach((rowContent, idx) => {
-                        if(rowContent.trim()){
-                            let vIndex = idx + 1;
-                            if(table.rows.length === 36) vIndex = `${Math.floor(idx / 6) + 1}${(idx % 6) + 1}`;
-                            html += `<tr><td>${vIndex}</td><td>${rowContent}</td></tr>`;
-                        }
-                    });
-                    html += `</tbody></table>`;
-                    if (hasText(table.footer)) html += `<div class="pdf-table-footer">${table.footer}</div>`;
-                    html += `</div>`; // fin masonry-item
-                });
-                html += '</div>';
-                return hasTables ? html : '';
-            };
+                    h1 { font-size: 24pt; font-weight: 900; border-bottom: 2pt solid #111827; padding-bottom: 5px; margin-top: 0; margin-bottom: 15px; }
+                    h2 { font-size: 14pt; font-weight: 700; border-bottom: 1pt solid #cbd5e1; margin-top: 15px; margin-bottom: 8px; padding-bottom: 2px; break-after: avoid; page-break-after: avoid;}
+                    h3 { font-size: 12pt; font-weight: bold; margin-bottom: 4px; color: #111827; }
+                    p, div, ul { margin-bottom: 8px; }
+                    ul { padding-left: 20px; }
+                    b, strong { font-weight: 700; color: #000; }
 
-            // Flujo principal del PDF
-            let html = `
-                <div class="pdf-page">
-                    <div class="pdf-title">${hex.title || `Aventura en Hexágono ${hex.label}`}</div>
+                    /* Diseño de 2 Columnas para el contenido principal (Estilo Zine) */
+                    .columns-wrapper {
+                        column-count: 2;
+                        column-gap: 8mm;
+                        /* El contenido fluye de arriba abajo y salta a la derecha solol */
+                    }
+                    
+                    /* Utilidad para evitar cortes feos */
+                    .avoid-break { break-inside: avoid; page-break-inside: avoid; margin-bottom: 15px; }
+
+                    /* Imagen Principal de Aventura (Ocupa las 2 columnas) */
+                    .main-image { max-width: 100%; max-height: 250px; object-fit: cover; border: 1pt solid #334155; padding: 3px; display: block; margin: 0 auto 15px auto; column-span: all; }
+
+                    /* Imagen de criatura / PNJ (Dentro de su columna) */
+                    .npc-image { width: 100%; max-height: 120px; object-fit: contain; border: 1pt solid #cbd5e1; padding: 2px; margin-bottom: 6px; border-radius: 3px;}
+
+                    /* Tablas */
+                    table { width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 4px; border-bottom: 2pt solid #1f2937; border-top: 2pt solid #1f2937; font-size: 9pt; }
+                    th { background-color: #f1f5f9; padding: 4px; text-align: left; border-bottom: 1pt solid #94a3b8; ${titleFont} }
+                    th:first-child { width: 30px; text-align: center; }
+                    td { padding: 4px; vertical-align: top; }
+                    td:first-child { font-weight: bold; text-align: center; }
+                    tr:nth-child(even) { background-color: #f8fafc; }
+                    
+                    .table-desc { font-size: 9pt; color: #475569; font-style: italic; margin-bottom: 4px; }
+                    .table-footer { font-size: 8pt; color: #64748b; margin-top: 4px; }
+
+                    /* Bloques PNJ / Enemigos */
+                    .stat-block { border: 1pt solid #cbd5e1; padding: 8px; border-radius: 3px; background: #fff; box-shadow: 2px 2px 0px #e2e8f0;}
+                    .stat-line { background: #f1f5f9; padding: 3px; border-radius: 2px; font-size: 8.5pt; font-weight: bold; color: #334155; margin-bottom: 6px;}
+                    .npc-field { font-size: 9pt; margin-bottom: 3px; }
+                    .magic-text { color: #047857; }
+                    .secret-text { color: #475569; font-style: italic; }
+                    .danger-text { color: #b91c1c; }
+                    .clue-text { color: #0369a1; }
+                </style>
+            </head>
+            <body>
+                <h1>${hex.title || `Aventura en Hexágono ${hex.label}`}</h1>
+                
+                <!-- Encabezado: Imagen y Sinopsis (Ocupa todo el ancho) -->
+                ${hex.imageUrl ? `<img src="${hex.imageUrl}" class="main-image">` : ''}
+                ${hasText(hex.description) ? `<h2>Sinopsis</h2><div style="margin-bottom: 20px;">${hex.description}</div>` : ''}
+                
+                <!-- Contenido distribuido en 2 Columnas -->
+                <div class="columns-wrapper">
             `;
-            
-            if(hex.imageUrl) html += `<div style="margin-bottom: 25px; padding: 5px; border: 2px solid #334155;"><img src="${hex.imageUrl}" style="width: 100%; max-height: 350px; object-fit: contain; display: block; margin: 0 auto;"></div>`;
-            if(hasText(hex.description)) html += `<div class="pdf-section-title">Sinopsis</div><div class="pdf-text">${hex.description}</div>`;
-            
-            // Tablas (ahora se renderizan en 2 columnas auto-ajustables si hay más de una)
-            html += renderPDFCustomTables(hex.customTables);
 
-            // Renderizar Enemigos (En Masonry)
-            if(hex.enemies.length > 0) {
-                let enemiesHtml = `<div class="pdf-section-title">Enemigos y Monstruos</div><div class="pdf-masonry">`;
-                let hasValidEnemies = false;
+            // 1. Tablas
+            hex.customTables.forEach(table => {
+                if(table.rows.every(row => !row.trim())) return;
+                
+                let diceType = 'd' + table.rows.length;
+                if(table.rows.length === 36) diceType = 'd66';
+                
+                htmlContent += `<div class="avoid-break">`;
+                htmlContent += `<h3>${table.title}</h3>`;
+                if (hasText(table.description)) htmlContent += `<div class="table-desc">${table.description}</div>`;
+                
+                htmlContent += `<table><thead><tr><th>${diceType}</th><th>${table.columnName || 'Resultado'}</th></tr></thead><tbody>`;
+                table.rows.forEach((rowContent, idx) => {
+                    if(rowContent.trim()){
+                        let vIndex = idx + 1;
+                        if(table.rows.length === 36) vIndex = `${Math.floor(idx / 6) + 1}${(idx % 6) + 1}`;
+                        htmlContent += `<tr><td>${vIndex}</td><td>${rowContent}</td></tr>`;
+                    }
+                });
+                htmlContent += `</tbody></table>`;
+                if (hasText(table.footer)) htmlContent += `<div class="table-footer">${table.footer}</div>`;
+                htmlContent += `</div>`; // fin avoid-break
+            });
+
+            // 2. Enemigos
+            if(hex.enemies.some(en => en.name.trim() || en.type.trim() || en.attack.trim())) {
+                htmlContent += `<h2>Enemigos y Monstruos</h2>`;
                 hex.enemies.forEach(en => {
                     if(!en.name.trim() && !en.type.trim() && !en.attack.trim() && !en.appearance.trim()) return;
-                    hasValidEnemies = true;
                     
-                    const imgHtml = en.imageUrl ? `<div style="margin-bottom: 10px; text-align: center;"><img src="${en.imageUrl}" style="max-height: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; padding: 2px; width: 100%;"></div>` : '';
+                    htmlContent += `<div class="avoid-break stat-block">`;
+                    if(en.imageUrl) htmlContent += `<img src="${en.imageUrl}" class="npc-image">`;
+                    htmlContent += `<h3>${en.name}</h3>`;
+                    
+                    if(en.type) htmlContent += `<div class="npc-field"><b>Tipo de criatura:</b> ${en.type}</div>`;
+                    if(en.appearance) htmlContent += `<div class="npc-field"><b>Apariencia:</b> ${en.appearance.replace(/\n/g, '<br>')}</div>`;
+                    if(en.behavior) htmlContent += `<div class="npc-field"><b>Comportamiento:</b> ${en.behavior.replace(/\n/g, '<br>')}</div>`;
+                    if(en.motivation) htmlContent += `<div class="npc-field"><b>Motivación:</b> ${en.motivation}</div>`;
+                    
                     const armor = en.armor > 0 ? `, Armadura ${en.armor}` : '';
+                    htmlContent += `<div class="stat-line">${en.hp || '-'} PG, FUE ${en.str || '-'}, DES ${en.dex || '-'}, VOL ${en.wil || '-'}${armor}</div>`;
                     
-                    enemiesHtml += `<div class="pdf-block pdf-masonry-item">${imgHtml}<div class="pdf-block-title">${en.name}</div>`;
-                    if(en.type) enemiesHtml += `<div class="pdf-field"><b>Tipo de criatura:</b> ${en.type}</div>`;
-                    if(en.appearance) enemiesHtml += `<div class="pdf-field"><b>Apariencia:</b> ${en.appearance.replace(/\n/g, '<br>')}</div>`;
-                    if(en.behavior) enemiesHtml += `<div class="pdf-field"><b>Comportamiento:</b> ${en.behavior.replace(/\n/g, '<br>')}</div>`;
-                    if(en.motivation) enemiesHtml += `<div class="pdf-field"><b>Motivación:</b> ${en.motivation}</div>`;
+                    if(en.attack) htmlContent += `<div class="npc-field"><b>Ataque:</b> ${en.attack}</div>`;
+                    if(en.special) htmlContent += `<div class="npc-field magic-text"><b>Especial:</b> ${en.special.replace(/\n/g, '<br>')}</div>`;
+                    if(en.weakness) htmlContent += `<div class="npc-field"><b>Debilidad:</b> ${en.weakness}</div>`;
                     
-                    enemiesHtml += `<div class="pdf-stats">${en.hp || '-'} PG, FUE ${en.str || '-'}, DES ${en.dex || '-'}, VOL ${en.wil || '-'}${armor}</div>`;
-                    
-                    if(en.attack) enemiesHtml += `<div class="pdf-field"><b>Ataque:</b> ${en.attack}</div>`;
-                    if(en.special) enemiesHtml += `<div class="pdf-field" style="color:#047857;"><b>Especial:</b> ${en.special.replace(/\n/g, '<br>')}</div>`;
-                    if(en.weakness) enemiesHtml += `<div class="pdf-field"><b>Debilidad:</b> ${en.weakness}</div>`;
-                    enemiesHtml += `</div>`; // fin block
+                    htmlContent += `</div>`;
                 });
-                enemiesHtml += `</div>`; // fin masonry
-                if(hasValidEnemies) html += enemiesHtml;
             }
 
-            // Renderizar PNJs (En Masonry)
-            if(hex.npcs.length > 0) {
-                let npcsHtml = `<div class="pdf-section-title">Personajes No Jugadores</div><div class="pdf-masonry">`;
-                let hasValidNpcs = false;
+            // 3. PNJs
+            if(hex.npcs.some(npc => npc.name.trim() || npc.appearance.trim() || npc.personality.trim())) {
+                htmlContent += `<h2>Personajes No Jugadores</h2>`;
                 hex.npcs.forEach(npc => {
                     if(!npc.name.trim() && !npc.appearance.trim() && !npc.personality.trim()) return;
-                    hasValidNpcs = true;
                     
-                    const imgHtml = npc.imageUrl ? `<div style="margin-bottom: 10px; text-align: center;"><img src="${npc.imageUrl}" style="max-height: 150px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; padding: 2px; width: 100%;"></div>` : '';
-                    npcsHtml += `<div class="pdf-block pdf-masonry-item">${imgHtml}<div class="pdf-block-title">${npc.name}</div>`;
+                    htmlContent += `<div class="avoid-break stat-block">`;
+                    if(npc.imageUrl) htmlContent += `<img src="${npc.imageUrl}" class="npc-image">`;
+                    htmlContent += `<h3>${npc.name}</h3>`;
                     
-                    if(npc.appearance) npcsHtml += `<div class="pdf-field"><b>Apariencia:</b> ${npc.appearance.replace(/\n/g, '<br>')}</div>`;
-                    if(npc.personality) npcsHtml += `<div class="pdf-field"><b>Personalidad:</b> ${npc.personality}</div>`;
-                    if(npc.motivation) npcsHtml += `<div class="pdf-field"><b>Motivación:</b> ${npc.motivation}</div>`;
-                    if(npc.secret) npcsHtml += `<div class="pdf-field" style="color:#475569; font-style:italic;"><b>Secreto:</b> ${npc.secret.replace(/\n/g, '<br>')}</div>`;
-                    npcsHtml += `</div>`;
+                    if(npc.appearance) htmlContent += `<div class="npc-field"><b>Apariencia:</b> ${npc.appearance.replace(/\n/g, '<br>')}</div>`;
+                    if(npc.personality) htmlContent += `<div class="npc-field"><b>Personalidad:</b> ${npc.personality}</div>`;
+                    if(npc.motivation) htmlContent += `<div class="npc-field"><b>Motivación:</b> ${npc.motivation}</div>`;
+                    if(npc.secret) htmlContent += `<div class="npc-field secret-text"><b>Secreto:</b> ${npc.secret.replace(/\n/g, '<br>')}</div>`;
+                    
+                    htmlContent += `</div>`;
                 });
-                npcsHtml += `</div>`;
-                if(hasValidNpcs) html += npcsHtml;
             }
 
-            // Renderizar Lugares (Acho completo para mayor legibilidad)
-            if(hex.locations.length > 0) {
-                let locsHtml = `<div class="pdf-section-title">Lugares de Interés</div>`;
-                let hasValidLocs = false;
+            // 4. Lugares
+            if(hex.locations.some(loc => loc.name.trim() || loc.description.trim())) {
+                htmlContent += `<h2>Lugares de Interés</h2>`;
                 hex.locations.forEach((loc, i) => {
                     if(!loc.name.trim() && !loc.description.trim()) return;
-                    hasValidLocs = true;
                     
-                    locsHtml += `<div class="pdf-full-width-item">
-                                <span style="font-family: 'Merriweather', serif; font-weight: bold; font-size: 15px; color: #1e293b;">${i+1}. ${loc.name}</span>`;
-                    if(loc.description) locsHtml += `<div class="pdf-text" style="margin-top: 5px; margin-bottom: 4px;"><b>Descripción:</b> ${loc.description.replace(/\n/g, '<br>')}</div>`;
-                    if(loc.interesting) locsHtml += `<div class="pdf-field"><b>Algo interesante:</b> ${loc.interesting}</div>`;
-                    if(loc.danger) locsHtml += `<div class="pdf-field" style="color:#b91c1c;"><b>Un peligro:</b> ${loc.danger}</div>`;
-                    if(loc.clue) locsHtml += `<div class="pdf-field" style="color:#0369a1;"><b>Una pista:</b> ${loc.clue}</div>`;
-                    locsHtml += `</div>`;
+                    htmlContent += `<div class="avoid-break" style="margin-bottom: 12px;">`;
+                    htmlContent += `<h3>${i+1}. ${loc.name}</h3>`;
+                    if(loc.description) htmlContent += `<div class="npc-field"><b>Descripción:</b> ${loc.description.replace(/\n/g, '<br>')}</div>`;
+                    if(loc.interesting) htmlContent += `<div class="npc-field"><b>Algo interesante:</b> ${loc.interesting}</div>`;
+                    if(loc.danger) htmlContent += `<div class="npc-field danger-text"><b>Un peligro:</b> ${loc.danger}</div>`;
+                    if(loc.clue) htmlContent += `<div class="npc-field clue-text"><b>Una pista:</b> ${loc.clue}</div>`;
+                    htmlContent += `</div>`;
                 });
-                if(hasValidLocs) html += locsHtml;
             }
 
-            html += `
-                    <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 10px;">
-                        Generado con Maquetador Mausritter - Hexágono ${hex.label}
-                    </div>
+            htmlContent += `
+                </div> <!-- Cierra columns-wrapper -->
+                <div style="margin-top: 30px; text-align: center; font-size: 8pt; color: #94a3b8; border-top: 1pt solid #cbd5e1; padding-top: 10px; column-span: all;">
+                    Generado con Maquetador Mausritter - Hexágono ${hex.label}
                 </div>
+            </body>
+            </html>
             `;
 
-            container.innerHTML = html;
+            // Abrir una nueva ventana limpia e inyectar el HTML
+            const printWindow = window.open('', '_blank');
+            printWindow.document.open();
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
 
+            // Esperar un breve instante para que carguen las fuentes e imágenes antes de imprimir
             setTimeout(() => {
-                const opt = {
-                    margin:       [0.4, 0.4, 0.4, 0.4], // Ajustado para evitar recortes en los bordes
-                    filename:     `Hex${hex.label}_${(hex.title || 'Aventura').replace(/\s+/g, '_')}.pdf`,
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
-                    pagebreak:    { mode: ['css', 'legacy'] } // Crucial para respetar los saltos de página de CSS
-                };
-                html2pdf().set(opt).from(container).save().then(() => {
-                    container.innerHTML = ''; btn.innerHTML = originalText; btn.disabled = false;
-                });
-            }, 300);
+                printWindow.document.title = `Aventura_Hex${hex.label}`; // Da nombre al archivo PDF al guardarlo
+                printWindow.print();
+            }, 800);
         }
 
         // --- MODAL Y MENSAJE SECRETO DESDE GITHUB ---
@@ -974,16 +945,14 @@
             const textarea = document.getElementById('copyTextarea');
             modal.classList.replace('hidden', 'flex'); 
             
-            // Si es la primera vez que se abre, descargamos el texto desde GitHub (versión Raw)
             if (!hasFetchedPrompt) {
                 textarea.value = "Conectando con GitHub para descargar el prompt...";
                 try {
-                    // Usamos la URL 'raw' de GitHub para obtener solo el texto puro
                     const response = await fetch('https://raw.githubusercontent.com/PoisonedIsa/Generador-de-Mausritter/main/recursos/promp_generacion_aventuras');
                     if (response.ok) {
                         const text = await response.text();
                         textarea.value = text;
-                        hasFetchedPrompt = true; // Marcamos como descargado para no volver a pedirlo
+                        hasFetchedPrompt = true; 
                     } else {
                         textarea.value = "Hubo un error al intentar descargar el archivo desde GitHub. Verifica que el repositorio sea público.";
                     }

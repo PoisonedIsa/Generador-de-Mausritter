@@ -872,9 +872,18 @@
                 svgHTML += `<g data-id="${hex.id}" class="hex-group cursor-pointer transition-transform" transform="translate(${hex.x}, ${hex.y})">
                             <polygon points="${hexPoints}" fill="${t.color}" stroke="${isSelected ? '#10b981' : '#475569'}" stroke-width="${isSelected ? '4' : '1.5'}" stroke-linejoin="round" class="hover:brightness-95"></polygon>`;
 
-                if (hex.imageUrl) svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
-                svgHTML += `<text x="0" y="-15" text-anchor="middle" class="text-[12px] font-bold pointer-events-none ${hex.imageUrl ? 'fill-white' : 'fill-slate-500 opacity-50'} font-serif" style="${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
-                if (t.icon && !hex.imageUrl) svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" class="text-[20px] pointer-events-none">${t.icon}</text>`;
+                if (hex.imageUrl) {
+                    svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
+                }
+                
+                // Numeración en la esquina superior izquierda, estilo discreto
+                svgHTML += `<text x="${-W/2 + 10}" y="${-R/2 + 16}" text-anchor="start" font-family="sans-serif" font-size="10px" font-weight="bold" fill="${hex.imageUrl ? '#ffffff' : '#475569'}" opacity="${hex.imageUrl ? '1' : '0.8'}" style="pointer-events: none; ${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
+                
+                // Icono
+                if (t.icon && !hex.imageUrl) {
+                    svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" font-size="20px" style="pointer-events: none;">${t.icon}</text>`;
+                }
+                
                 svgHTML += `</g>`;
             });
             const pad = 60;
@@ -883,18 +892,126 @@
         }
 
         function exportMapAsImage() {
+            const btn = document.getElementById('exportMapBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Generando Alta Res...';
+            btn.disabled = true;
+
             const svgData = new XMLSerializer().serializeToString(svgEl);
-            const canvas = document.createElement("canvas"); const ctx = canvas.getContext("2d"); const img = new Image();
+            const canvas = document.createElement("canvas"); 
+            const ctx = canvas.getContext("2d"); 
+            const img = new Image();
+            
             const viewBox = svgEl.getAttribute('viewBox').split(' ').map(parseFloat);
-            canvas.width = viewBox[2]; canvas.height = viewBox[3];
+            const vX = viewBox[0];
+            const vY = viewBox[1];
+            const vW = viewBox[2];
+            const vH = viewBox[3];
+
+            // 1. Preparar lista de leyendas (Aventuras)
+            const hexList = Object.values(hexes).sort((a, b) => a.label - b.label);
+            const legendItems = hexList.map(h => {
+                let title = h.title.trim();
+                const defaultTitle = `Aventura en Hexágono ${h.label}`;
+                if (title === defaultTitle || title === '') {
+                    title = '?';
+                }
+                return `${h.label}.- ${title}`;
+            });
+
+            // 2. NUEVO: Escala visual diferenciada (El mapa es el doble de grande que el texto)
+            const mapVisualScale = 2.0; 
+            const drawW = vW * mapVisualScale;
+            const drawH = vH * mapVisualScale;
+
+            // 3. Configurar dimensiones generales (Manteniendo Alta Calidad sin romper la RAM)
+            const scale = 3; // (Como el mapa ya se multiplicó x2, su resolución real final será 6x)
+            const padding = 60;
+            const titleHeight = 80;
+            
+            const lineHeight = 24; // Interlineado más apretado para las letras
+            const maxLegendHeight = Math.max(drawH, 400); 
+            // Calcular cuántas líneas caben por columna (dejando un margen)
+            const linesPerCol = Math.max(10, Math.floor(maxLegendHeight / lineHeight) - 2);
+            const numCols = Math.ceil(legendItems.length / linesPerCol);
+            const colWidth = 220; // Columnas mucho más estrechas para que no coman espacio
+            const legendWidth = legendItems.length > 0 ? (numCols * colWidth) : 0;
+
+            // Ancho del canvas = margen + mapa gigante + margen + leyendas pequeñas + margen
+            const canvasW = padding + drawW + (legendWidth > 0 ? padding : 0) + legendWidth + padding;
+            const canvasH = padding + titleHeight + Math.max(drawH, legendItems.length > 0 ? linesPerCol * lineHeight : 0) + padding + 40;
+
+            canvas.width = canvasW * scale;
+            canvas.height = canvasH * scale;
+            
+            // Dibujar el fondo
+            ctx.fillStyle = "#f8fafc"; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.scale(scale, scale);
+
             img.onload = () => {
-                ctx.fillStyle = "#f8fafc"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0);
-                const link = document.createElement("a"); link.download = `${mapTitle.replace(/\s+/g, '_')}_Mapa.png`;
-                link.href = canvas.toDataURL("image/png"); link.click();
+                // Título del Mapa Principal
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 46px 'Merriweather', serif";
+                ctx.fillText(mapTitle || 'Mi Principado de Mausritter', padding, padding + 40);
+
+                // DIBUJAR EL MAPA SVG GIGANTE
+                ctx.drawImage(img, padding, padding + titleHeight, drawW, drawH);
+
+                // Dibujar la Tabla de Aventuras (más pequeña y compacta)
+                if (legendItems.length > 0) {
+                    ctx.fillStyle = "#1e293b";
+                    ctx.font = "bold 20px 'Merriweather', serif";
+                    const legendStartX = padding + drawW + padding;
+                    ctx.fillText("Lugares y Rumores", legendStartX, padding + titleHeight + 30);
+
+                    ctx.font = "14px 'Inter', sans-serif"; // Fuente reducida para la lista
+                    ctx.fillStyle = "#475569";
+                    
+                    legendItems.forEach((item, index) => {
+                        const col = Math.floor(index / linesPerCol);
+                        const row = index % linesPerCol;
+                        const x = legendStartX + (col * colWidth);
+                        const y = padding + titleHeight + 65 + (row * lineHeight);
+                        
+                        let text = item;
+                        // Acortar texto si es muy largo para la columna
+                        if (ctx.measureText(text).width > colWidth - 20) {
+                            while(text.length > 0 && ctx.measureText(text + '...').width > colWidth - 20) {
+                                text = text.slice(0, -1);
+                            }
+                            text += '...';
+                        }
+                        ctx.fillText(text, x, y);
+                    });
+                }
+
+                // Marca de agua
+                ctx.font = "12px 'Inter', sans-serif";
+                ctx.fillStyle = "#94a3b8";
+                ctx.fillText("Generado con Maquetador Mausritter", canvasW - 260, canvasH - 20);
+
+                // Descargar
+                const link = document.createElement("a"); 
+                link.download = `${(mapTitle || 'Mapa').replace(/\s+/g, '_')}_Mapa.png`;
+                link.href = canvas.toDataURL("image/png", 1.0); 
+                link.click();
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             };
+            
+            img.onerror = (e) => {
+                console.error(e);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert("Hubo un error al generar el mapa.");
+            };
+
+            // Codificar el SVG para inyectarlo en la imagen
             img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
         }
-
 
         // --- IMPRESIÓN NATIVA / EXPORTAR A PDF (Texto Real, 2 Columnas) ---
         function exportAdventurePrint() {

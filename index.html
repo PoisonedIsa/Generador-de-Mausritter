@@ -866,27 +866,56 @@
             renderTablesUI(); renderEnemiesUI(); renderNPCsUI(); renderLocationsUI();
         }
 
+        // NUEVO: Función auxiliar para saber si un hexágono tiene contenido
+        function isHexExplored(hex) {
+            if (hex.terrain !== 'blank') return true;
+            if (hex.title.trim() !== '' && hex.title !== `Aventura en Hexágono ${hex.label}`) return true;
+            if (hasText(hex.description)) return true;
+            if (hex.imageUrl) return true;
+            if (hex.enemies && hex.enemies.length > 0) return true;
+            if (hex.npcs && hex.npcs.length > 0) return true;
+            if (hex.locations && hex.locations.length > 0) return true;
+            return false;
+        }
+
         function renderMap() {
             const hexArray = Object.values(hexes);
             if (hexArray.length === 0) return;
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            let svgHTML = `<defs><clipPath id="hex-clip"><polygon points="${hexPoints}"></polygon></clipPath></defs>`;
+            
+            // Añadido el patrón de interrogaciones en las definiciones (defs)
+            let svgHTML = `<defs>
+                <clipPath id="hex-clip"><polygon points="${hexPoints}"></polygon></clipPath>
+                <pattern id="unknown-pattern" x="0" y="0" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(20)">
+                    <text x="9" y="14" font-family="Georgia, serif" font-size="14px" font-weight="bold" fill="#94a3b8" opacity="0.3" text-anchor="middle">?</text>
+                </pattern>
+            </defs>`;
 
             hexArray.forEach(hex => {
                 minX = Math.min(minX, hex.x); maxX = Math.max(maxX, hex.x);
                 minY = Math.min(minY, hex.y); maxY = Math.max(maxY, hex.y);
                 const isSelected = selectedHexId === hex.id, t = TERRAINS[hex.terrain];
+                const explored = isHexExplored(hex);
 
                 svgHTML += `<g data-id="${hex.id}" class="hex-group cursor-pointer transition-transform" transform="translate(${hex.x}, ${hex.y})">
                             <polygon points="${hexPoints}" fill="${t.color}" stroke="${isSelected ? '#10b981' : '#475569'}" stroke-width="${isSelected ? '4' : '1.5'}" stroke-linejoin="round" class="hover:brightness-95"></polygon>`;
+
+                // Si NO está explorado, dibujamos el entramado de ? y no mostramos su icono de terreno base
+                if (!explored) {
+                    svgHTML += `<polygon points="${hexPoints}" fill="url(#unknown-pattern)" style="pointer-events: none;"></polygon>`;
+                }
 
                 if (hex.imageUrl) {
                     svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
                 }
                 
-                svgHTML += `<text x="${-W/2 + 10}" y="${-R/2 + 16}" text-anchor="start" font-family="sans-serif" font-size="10px" font-weight="bold" fill="${hex.imageUrl ? '#ffffff' : '#475569'}" opacity="${hex.imageUrl ? '1' : '0.8'}" style="pointer-events: none; ${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
+                // Solo renderizamos el número de la esquina si está explorado
+                if (explored) {
+                    svgHTML += `<text x="${-W/2 + 8}" y="${-R/2 + 12}" text-anchor="start" font-family="sans-serif" font-size="8px" font-weight="bold" fill="${hex.imageUrl ? '#ffffff' : '#475569'}" opacity="${hex.imageUrl ? '1' : '0.8'}" style="pointer-events: none; ${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
+                }
                 
-                if (t.icon && !hex.imageUrl) {
+                // Renderizar icono si tiene terreno asignado (y está explorado visualmente)
+                if (t.icon && !hex.imageUrl && explored) {
                     svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" font-size="20px" style="pointer-events: none;">${t.icon}</text>`;
                 }
                 
@@ -915,7 +944,11 @@
             const vH = viewBox[3];
 
             const hexList = Object.values(hexes).sort((a, b) => a.label - b.label);
-            const legendItems = hexList.map(h => {
+            
+            // Solo mostramos en la tabla los hexágonos que hayan sido explorados/editados
+            const exploredHexes = hexList.filter(h => isHexExplored(h));
+            
+            const legendItems = exploredHexes.map(h => {
                 let title = h.title.trim();
                 const defaultTitle = `Aventura en Hexágono ${h.label}`;
                 if (title === defaultTitle || title === '') {

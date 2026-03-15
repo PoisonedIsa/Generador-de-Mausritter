@@ -26,8 +26,10 @@
         }
         .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
         .rich-text-content h4 { font-weight: bold; font-size: 1.1em; margin-top: 0.5rem; margin-bottom: 0.25rem; }
-        /* Estilo para las imágenes insertadas en el texto */
         .rich-text-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 8px auto; display: block; border: 1px solid #e2e8f0; }
+        
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
@@ -138,20 +140,33 @@
         <!-- Estado con selección -->
         <div id="inspectorPanel" class="flex flex-col h-full hidden">
             <!-- Cabecera del Inspector -->
-            <div class="p-4 border-b bg-emerald-50 flex items-center gap-3">
-                <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-black font-serif text-lg shadow-sm" id="hexIdLabel">1</div>
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 font-serif" id="inspectorHeaderTitle">Hexágono</h2>
-                    <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider">Editor de Aventura</p>
+            <div class="p-4 border-b border-slate-200 bg-emerald-50 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-black font-serif text-lg shadow-sm" id="hexIdLabel">1</div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 font-serif" id="inspectorHeaderTitle">Hexágono</h2>
+                        <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider">Editor de Zona</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TIPO DE HEXÁGONO (Aventura vs Facción) -->
+            <div class="px-4 pt-4 pb-2 border-b border-slate-200 bg-white flex gap-3 items-center shrink-0">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipo:</span>
+                <div class="flex flex-1 bg-slate-100 p-1 rounded border border-slate-200">
+                    <button id="type-adv-btn" onclick="setHexType('adventure')" class="flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200">Localización / Aventura</button>
+                    <button id="type-fac-btn" onclick="setHexType('faction')" class="flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent">Sede de Facción</button>
                 </div>
             </div>
 
             <!-- Navegación por pestañas -->
-            <div class="flex border-b border-slate-200 bg-slate-50 text-sm font-medium">
-                <button onclick="switchTab('info')" id="tab-info" class="tab-btn flex-1 py-2 text-center border-b-2 border-emerald-500 text-emerald-700">Info</button>
-                <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn flex-1 py-2 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700">Tablas</button>
-                <button onclick="switchTab('characters')" id="tab-characters" class="tab-btn flex-1 py-2 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700">Personajes</button>
-                <button onclick="switchTab('locations')" id="tab-locations" class="tab-btn flex-1 py-2 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700">Lugares</button>
+            <div class="flex border-b border-slate-200 bg-slate-50 text-sm font-medium shrink-0 overflow-x-auto hide-scroll" id="tabsContainer">
+                <button onclick="switchTab('info')" id="tab-info" class="tab-btn flex-1 py-2 px-3 text-center border-b-2 border-emerald-500 text-emerald-700 whitespace-nowrap">Info</button>
+                <button onclick="switchTab('tables')" id="tab-tables" class="tab-btn flex-1 py-2 px-3 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap">Tablas</button>
+                <button onclick="switchTab('characters')" id="tab-characters" class="tab-btn flex-1 py-2 px-3 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap">Personajes</button>
+                <button onclick="switchTab('locations')" id="tab-locations" class="tab-btn flex-1 py-2 px-3 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap">Lugares</button>
+                <!-- Pestaña de Facción exclusiva -->
+                <button onclick="switchTab('faction-details')" id="tab-faction-details" class="tab-btn flex-1 py-2 px-3 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 whitespace-nowrap hidden">Detalles de Facción</button>
             </div>
 
             <!-- Contenido de las pestañas -->
@@ -160,8 +175,8 @@
                 <!-- PESTAÑA: INFO -->
                 <div id="content-info" class="tab-content space-y-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Título de la Aventura</label>
-                        <input type="text" id="hexTitleInput" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none font-serif text-lg" placeholder="Ej. El Bosque Oscuro...">
+                        <label class="block text-sm font-bold text-slate-700 mb-1" id="labelHexTitle">Título de la Aventura</label>
+                        <input type="text" id="hexTitleInput" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none font-serif text-lg" placeholder="...">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Terreno Base</label>
@@ -173,33 +188,32 @@
                             <input type="file" id="hexImageInput" accept="image/*" class="w-full p-1 border border-slate-300 rounded outline-none text-xs bg-slate-50">
                             <button id="removeImageBtn" class="mt-1 text-[10px] font-bold text-red-500 hover:text-red-700 hidden">Quitar Imagen</button>
                         </div>
-                        <div>
-                            <!-- SUBMENÚ MAPA DE EXPLORACIÓN -->
-                            <label class="block text-xs font-bold text-emerald-700 mb-1">Mapa del Lugar</label>
+                        <div id="mapUploadContainer">
+                            <label class="block text-xs font-bold text-emerald-700 mb-1">Mapa de Exploración</label>
                             <input type="file" id="hexMapImageInput" accept="image/*" class="w-full p-1 border border-emerald-300 bg-emerald-50 rounded outline-none text-xs">
                             <button id="removeMapImageBtn" class="mt-1 text-[10px] font-bold text-red-500 hover:text-red-700 hidden">Quitar Mapa</button>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Sinopsis / Descripción General</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1" id="labelHexDesc">Sinopsis / Descripción</label>
                         <div class="border border-slate-300 rounded focus-within:border-emerald-500 overflow-hidden flex flex-col bg-white shadow-sm">
-                            <div class="bg-slate-100 border-b border-slate-300 flex gap-1 p-1 items-center">
-                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs" title="Negrita">B</button>
-                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded italic text-xs" title="Cursiva">I</button>
+                            <div class="bg-slate-100 border-b border-slate-300 flex gap-1 p-1 items-center flex-wrap">
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs">B</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded italic text-xs">I</button>
                                 <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('insertUnorderedList',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Viñetas">• Lista</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('insertUnorderedList',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs">• Lista</button>
                                 <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold" title="Título">Título</button>
-                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Texto Normal">Texto</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold">Título</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs">Texto</button>
                                 <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                                <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen dentro del texto">🖼️ Img</button>
+                                <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold">🖼️ Img</button>
                             </div>
-                            <div contenteditable="true" id="hexDescInput" class="p-2 outline-none text-sm rich-text-content" style="min-height: 120px;" data-placeholder="Describe el ambiente, la historia principal..."></div>
+                            <div contenteditable="true" id="hexDescInput" class="p-2 outline-none text-sm rich-text-content" style="min-height: 120px;" data-placeholder="..."></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- PESTAÑA: TABLAS -->
+                <!-- PESTAÑA: TABLAS (Solo Aventura) -->
                 <div id="content-tables" class="tab-content hidden space-y-6">
                     <p class="text-xs text-slate-500 mb-2">Crea tablas personalizadas (d6, d20, d66...). Añade el título y selecciona la cantidad de filas.</p>
                     <div id="tablesListContainer" class="space-y-6"></div>
@@ -216,10 +230,10 @@
                     </div>
                 </div>
 
-                <!-- PESTAÑA: PERSONAJES (ENEMIGOS Y NPCs) -->
+                <!-- PESTAÑA: PERSONAJES -->
                 <div id="content-characters" class="tab-content hidden space-y-6">
                     <!-- Sección Enemigos -->
-                    <div>
+                    <div id="enemiesSection">
                         <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1 flex justify-between items-center">
                             Enemigos y Monstruos
                             <button onclick="addEnemy()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir Enemigo</button>
@@ -229,9 +243,9 @@
                     </div>
 
                     <!-- Sección PNJs -->
-                    <div class="pt-4 border-t border-slate-300">
+                    <div class="pt-4 border-t border-slate-300" id="npcsSection">
                         <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1 flex justify-between items-center">
-                            Personajes No Jugadores (PNJ)
+                            Miembros / PNJs
                             <button onclick="addNPC()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir PNJ</button>
                         </h3>
                         <p class="text-[11px] text-slate-500 mb-3">Enfocado en interacciones sociales, personalidad y secretos.</p>
@@ -239,7 +253,7 @@
                     </div>
                 </div>
 
-                <!-- PESTAÑA: LUGARES -->
+                <!-- PESTAÑA: LUGARES (Solo Aventura) -->
                 <div id="content-locations" class="tab-content hidden space-y-4">
                     <p class="text-xs text-slate-500 mb-2">Añade los puntos de interés dentro de este hexágono, detallando pistas y peligros.</p>
                     <div id="locationsList" class="space-y-4"></div>
@@ -248,16 +262,38 @@
                     </button>
                 </div>
 
+                <!-- PESTAÑA: DETALLES DE FACCIÓN (Solo Facción) -->
+                <div id="content-faction-details" class="tab-content hidden space-y-6">
+                    <div>
+                        <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1">Objetivos y Planes</h3>
+                        <p class="text-[11px] text-slate-500 mb-3">Se exportarán como casillas de verificación (Check-in) en el PDF.</p>
+                        <div id="factionObjectivesList" class="space-y-2 mb-2"></div>
+                        <button onclick="addFactionObjective()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir Objetivo</button>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1">Recursos y Bases</h3>
+                        <p class="text-[11px] text-slate-500 mb-3">Se exportarán como una lista con viñetas en el PDF.</p>
+                        <div id="factionResourcesList" class="space-y-2 mb-2"></div>
+                        <button onclick="addFactionResource()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir Recurso</button>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1">Notas y Relaciones</h3>
+                        <p class="text-[11px] text-slate-500 mb-2">Apunta tratos, alianzas o datos extra importantes.</p>
+                        <div id="factionNotesEditorContainer"></div>
+                    </div>
+                </div>
+
             </div>
             
             <!-- Botón Exportar PDF -->
-            <div class="p-4 border-t border-slate-200 bg-white flex flex-col gap-2">
+            <div class="p-4 border-t border-slate-200 bg-white flex flex-col gap-2 shrink-0">
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-slate-600 font-medium">Fuente del PDF:</span>
                     <select id="pdfFontSelect" class="p-1 border border-slate-300 rounded outline-none focus:border-emerald-500 bg-slate-50">
                         <option value="font-family: 'Merriweather', serif;" data-text="font-family: 'Inter', sans-serif;">Clásica (Merriweather)</option>
                         <option value="font-family: 'Crimson Text', serif;" data-text="font-family: 'Crimson Text', serif;">Antigua (Crimson Text)</option>
-                        <!-- Gótica pero con texto en Crimson Text para que los párrafos se puedan leer -->
                         <option value="font-family: 'UnifrakturMaguntia', serif;" data-text="font-family: 'Crimson Text', serif;">Gótica / Old-English</option>
                         <option value="font-family: 'Courier Prime', monospace;" data-text="font-family: 'Courier Prime', monospace;">Mecanografiada (Courier)</option>
                     </select>
@@ -305,7 +341,7 @@
                 reader.onload = ev => {
                     editor.focus();
                     document.execCommand('insertImage', false, ev.target.result);
-                    editor.dispatchEvent(new Event('input')); // Activa el autoguardado
+                    editor.dispatchEvent(new Event('input')); 
                 };
                 reader.readAsDataURL(file);
             };
@@ -315,7 +351,7 @@
         function createRichTextEditor(value, onInputAction, placeholder, minHeight = "60px") {
             return `
             <div class="border border-slate-300 rounded focus-within:border-emerald-500 overflow-hidden flex flex-col bg-white shadow-sm">
-                <div class="bg-slate-100 border-b border-slate-300 flex gap-1 p-1 items-center">
+                <div class="bg-slate-100 border-b border-slate-300 flex gap-1 p-1 items-center flex-wrap">
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs" title="Negrita">B</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded italic text-xs" title="Cursiva">I</button>
                     <div class="w-px h-3 bg-slate-300 mx-1"></div>
@@ -393,7 +429,6 @@
 
         // --- SISTEMA DE GUARDADO ---
         let autoSaveTimer;
-        
         function debounceAutoSave() {
             clearTimeout(autoSaveTimer);
             document.getElementById('autoSaveStatus').innerText = "Guardando...";
@@ -470,6 +505,12 @@
             mapRows = data.mapRows || 5;
             hexes = data.hexes || {};
             
+            // Compatibilidad y estructuras base
+            Object.values(hexes).forEach(hex => {
+                if (!hex.hexType) hex.hexType = 'adventure';
+                if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
+            });
+
             document.getElementById('mapTitleInput').value = mapTitle;
             document.getElementById('displayTitle').innerText = mapTitle;
             document.getElementById('mapShapeSelect').value = mapShape;
@@ -501,15 +542,30 @@
             document.getElementById('hexTerrainSelect').innerHTML = optionsHTML;
         }
 
+        // --- SISTEMA DE TIPO DE HEXÁGONO (Aventura vs Facción) ---
+        function setHexType(type) {
+            if (!selectedHexId) return;
+            hexes[selectedHexId].hexType = type;
+            debounceAutoSave();
+            updateInspectorUI();
+            switchTab('info'); // Reset a la pestaña info al cambiar
+        }
+
         function switchTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('border-emerald-500', 'text-emerald-700');
                 btn.classList.add('border-transparent', 'text-slate-500');
             });
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-slate-500');
-            document.getElementById(`tab-${tabName}`).classList.add('border-emerald-500', 'text-emerald-700');
-            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            
+            const targetBtn = document.getElementById(`tab-${tabName}`);
+            if(targetBtn) {
+                targetBtn.classList.remove('border-transparent', 'text-slate-500');
+                targetBtn.classList.add('border-emerald-500', 'text-emerald-700');
+            }
+            
+            const targetContent = document.getElementById(`content-${tabName}`);
+            if(targetContent) targetContent.classList.remove('hidden');
         }
 
         function initListeners() {
@@ -538,7 +594,6 @@
                 updateData('imageUrl', null); document.getElementById('hexImageInput').value = ''; updateInspectorUI(); renderMap(); debounceAutoSave();
             });
 
-            // Mapa Secundario
             document.getElementById('hexMapImageInput').addEventListener('change', e => {
                 if (!selectedHexId || !e.target.files.length) return;
                 const reader = new FileReader();
@@ -816,6 +871,63 @@
             `).join('');
         }
 
+        // --- FACCIONES (Listas dinámicas) ---
+        function addFactionObjective() {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].faction.objectives.push('');
+            renderFactionsUI(); debounceAutoSave();
+        }
+        function removeFactionObjective(i) {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].faction.objectives.splice(i, 1);
+            renderFactionsUI(); debounceAutoSave();
+        }
+        function addFactionResource() {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].faction.resources.push('');
+            renderFactionsUI(); debounceAutoSave();
+        }
+        function removeFactionResource(i) {
+            if(!selectedHexId) return;
+            hexes[selectedHexId].faction.resources.splice(i, 1);
+            renderFactionsUI(); debounceAutoSave();
+        }
+
+        function renderFactionsUI() {
+            const listObj = document.getElementById('factionObjectivesList');
+            const listRes = document.getElementById('factionResourcesList');
+            const noteContainer = document.getElementById('factionNotesEditorContainer');
+            if(!selectedHexId) return;
+
+            const faction = hexes[selectedHexId].faction;
+
+            // Objetivos
+            listObj.innerHTML = faction.objectives.map((obj, i) => `
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-slate-400 font-mono text-lg">☐</span>
+                    <input type="text" value="${obj}" onchange="hexes['${selectedHexId}'].faction.objectives[${i}] = this.value; debounceAutoSave();" class="flex-1 p-1.5 border border-slate-300 rounded outline-none focus:border-emerald-500 text-sm" placeholder="Nuevo objetivo...">
+                    <button onclick="removeFactionObjective(${i})" class="text-red-400 hover:text-red-600 font-bold px-2">X</button>
+                </div>
+            `).join('');
+
+            // Recursos
+            listRes.innerHTML = faction.resources.map((res, i) => `
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-slate-400 text-lg">•</span>
+                    <input type="text" value="${res}" onchange="hexes['${selectedHexId}'].faction.resources[${i}] = this.value; debounceAutoSave();" class="flex-1 p-1.5 border border-slate-300 rounded outline-none focus:border-emerald-500 text-sm" placeholder="Nuevo recurso o base...">
+                    <button onclick="removeFactionResource(${i})" class="text-red-400 hover:text-red-600 font-bold px-2">X</button>
+                </div>
+            `).join('');
+
+            // Notas (Editor Enriquecido)
+            noteContainer.innerHTML = createRichTextEditor(
+                faction.notes,
+                `if(selectedHexId){hexes[selectedHexId].faction.notes = this.innerHTML;}`,
+                "Alianzas, rumores o datos secretos...",
+                "80px"
+            );
+        }
+
         // --- CORE MAPA ---
         function setActiveTool(toolId) {
             activeTool = toolId;
@@ -853,14 +965,16 @@
             const center = { x: W * (q + r / 2), y: H * 0.75 * r };
             return {
                 id, q, r, label, x: center.x, y: center.y,
+                hexType: 'adventure', // Puede ser 'adventure' o 'faction'
                 terrain: 'blank', imageUrl: null, mapImageUrl: null,
-                title: `Aventura en Hexágono ${label}`, description: '',
+                title: `Hexágono ${label}`, description: '',
                 customTables: [
                     { id: 't1', title: 'Ganchos', columnName: 'Gancho', description: '', footer: '', rows: ['','','','','',''] },
                     { id: 't2', title: 'Encuentros', columnName: 'Encuentro', description: '', footer: '', rows: ['','','','','',''] },
                     { id: 't3', title: 'Tesoros', columnName: 'Tesoro', description: '', footer: '', rows: ['','','','','',''] }
                 ],
-                enemies: [], npcs: [], locations: []
+                enemies: [], npcs: [], locations: [],
+                faction: { objectives: [''], resources: [''], notes: '' }
             };
         }
 
@@ -876,30 +990,63 @@
             noSel.classList.add('hidden'); insp.classList.remove('hidden');
             const hex = hexes[selectedHexId];
             
+            // Lógica de compatibilidad si es un mapa viejo
+            if (!hex.hexType) hex.hexType = 'adventure';
+            if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
+            
+            // Configurar botones de Tipo
+            document.getElementById('type-adv-btn').className = hex.hexType === 'adventure' ? 'flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200' : 'flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent';
+            document.getElementById('type-fac-btn').className = hex.hexType === 'faction' ? 'flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200' : 'flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent';
+
+            // Mostrar / Ocultar Pestañas según Tipo
+            const tabs = {
+                'tab-tables': hex.hexType === 'adventure',
+                'tab-locations': hex.hexType === 'adventure',
+                'tab-faction-details': hex.hexType === 'faction'
+            };
+            for(let id in tabs) {
+                if(tabs[id]) document.getElementById(id).classList.remove('hidden');
+                else document.getElementById(id).classList.add('hidden');
+            }
+
+            // Cambiar etiquetas basadas en el tipo
+            document.getElementById('inspectorHeaderTitle').innerText = hex.hexType === 'adventure' ? 'Aventura' : 'Sede de Facción';
+            document.getElementById('labelHexTitle').innerText = hex.hexType === 'adventure' ? 'Título de la Aventura' : 'Nombre de la Facción';
+            document.getElementById('labelHexDesc').innerText = hex.hexType === 'adventure' ? 'Sinopsis / Descripción General' : 'Trasfondo y Descripción';
+            
+            // Ocultar subida de mapa si es faccion (opcional, pero lo dejamos por si acaso lo quieren usar)
+            document.getElementById('mapUploadContainer').style.display = hex.hexType === 'adventure' ? 'block' : 'none';
+            document.getElementById('enemiesSection').style.display = hex.hexType === 'adventure' ? 'block' : 'none';
+            document.getElementById('npcsSection').querySelector('h3').innerHTML = hex.hexType === 'adventure' ? 'Personajes No Jugadores (PNJ) <button onclick="addNPC()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir PNJ</button>' : 'Miembros Clave de la Facción <button onclick="addNPC()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir Miembro</button>';
+
+
             document.getElementById('hexIdLabel').innerText = hex.label;
-            document.getElementById('inspectorHeaderTitle').innerText = hex.title || `Hexágono ${hex.label}`;
-            document.getElementById('hexTitleInput').value = hex.title;
+            document.getElementById('hexTitleInput').value = hex.title === `Hexágono ${hex.label}` ? '' : hex.title; // Limpiar para que sea más facil titular
             document.getElementById('hexTerrainSelect').value = hex.terrain;
             document.getElementById('hexDescInput').innerHTML = hex.description || '';
 
             if (hex.imageUrl) document.getElementById('removeImageBtn').classList.remove('hidden');
             else { document.getElementById('removeImageBtn').classList.add('hidden'); document.getElementById('hexImageInput').value = ''; }
 
-            // Actualizar interfaz del mapa de exploración
             if (hex.mapImageUrl) document.getElementById('removeMapImageBtn').classList.remove('hidden');
             else { document.getElementById('removeMapImageBtn').classList.add('hidden'); document.getElementById('hexMapImageInput').value = ''; }
 
-            renderTablesUI(); renderEnemiesUI(); renderNPCsUI(); renderLocationsUI();
+            renderTablesUI(); renderEnemiesUI(); renderNPCsUI(); renderLocationsUI(); renderFactionsUI();
         }
 
         function isHexExplored(hex) {
             if (hex.terrain !== 'blank') return true;
-            if (hex.title.trim() !== '' && hex.title !== `Aventura en Hexágono ${hex.label}`) return true;
+            if (hex.title.trim() !== '' && hex.title !== `Hexágono ${hex.label}`) return true;
             if (hasText(hex.description)) return true;
             if (hex.imageUrl) return true;
-            if (hex.enemies && hex.enemies.length > 0) return true;
+            if (hex.hexType === 'adventure') {
+                if (hex.enemies && hex.enemies.length > 0) return true;
+                if (hex.locations && hex.locations.length > 0) return true;
+            }
             if (hex.npcs && hex.npcs.length > 0) return true;
-            if (hex.locations && hex.locations.length > 0) return true;
+            if (hex.hexType === 'faction' && hex.faction) {
+                if (hex.faction.objectives.some(o => o.trim() !== '') || hex.faction.resources.some(r => r.trim() !== '') || hasText(hex.faction.notes)) return true;
+            }
             return false;
         }
 
@@ -968,9 +1115,9 @@
             
             const legendItems = exploredHexes.map(h => {
                 let title = h.title.trim();
-                const defaultTitle = `Aventura en Hexágono ${h.label}`;
+                const defaultTitle = `Hexágono ${h.label}`;
                 if (title === defaultTitle || title === '') title = '?';
-                return `${h.label}.- ${title}`;
+                return `${h.label}.- ${title} ${h.hexType === 'faction' ? '(Facción)' : ''}`;
             });
 
             const mapVisualScale = 2.0; 
@@ -985,7 +1132,7 @@
             const maxLegendHeight = Math.max(drawH, 400); 
             const linesPerCol = Math.max(10, Math.floor(maxLegendHeight / lineHeight) - 2);
             const numCols = Math.ceil(legendItems.length / linesPerCol);
-            const colWidth = 220; 
+            const colWidth = 260; 
             const legendWidth = legendItems.length > 0 ? (numCols * colWidth) : 0;
 
             const canvasW = padding + drawW + (legendWidth > 0 ? padding : 0) + legendWidth + padding;
@@ -1053,12 +1200,11 @@
             img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
         }
 
-        // --- IMPRESIÓN NATIVA / EXPORTAR A PDF (Texto Real, 2 Columnas) ---
+        // --- IMPRESIÓN NATIVA / EXPORTAR A PDF ---
         function exportAdventurePrint() {
             if(!selectedHexId) return;
             const hex = hexes[selectedHexId];
             
-            // Obtener familia de fuentes elegida
             const selectEl = document.getElementById('pdfFontSelect');
             const titleFont = selectEl.value; 
             const textFont = selectEl.options[selectEl.selectedIndex].getAttribute('data-text'); 
@@ -1068,14 +1214,12 @@
             <html lang="es">
             <head>
                 <meta charset="UTF-8">
-                <title>${hex.title || `Aventura Hexágono ${hex.label}`}</title>
+                <title>${hex.title || `Hexágono ${hex.label}`}</title>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
                 <style>
-                    /* Estilos base para la impresión OSR */
                     @page { size: A4; margin: 15mm; }
                     body { ${textFont} color: #111827; line-height: 1.4; font-size: 10pt; background: #fff; margin: 0; padding: 0; }
                     
-                    /* Tipografía para Títulos */
                     h1, h2, h3, .title-font, th { ${titleFont} }
                     
                     h1 { font-size: 24pt; font-weight: normal; border-bottom: 2pt solid #111827; padding-bottom: 5px; margin-top: 0; margin-bottom: 15px; }
@@ -1085,30 +1229,18 @@
                     ul { padding-left: 20px; }
                     b, strong { font-weight: 700; color: #000; }
 
-                    /* Diseño de 2 Columnas para el contenido principal (Estilo Zine) */
-                    .columns-wrapper {
-                        column-count: 2;
-                        column-gap: 8mm;
-                    }
-                    
-                    /* Utilidad para evitar cortes feos */
+                    .columns-wrapper { column-count: 2; column-gap: 8mm; }
                     .avoid-break { break-inside: avoid; page-break-inside: avoid; margin-bottom: 15px; }
 
-                    /* Imagen Principal de Aventura */
                     .main-image { max-width: 100%; max-height: 250px; object-fit: cover; border: 1pt solid #334155; padding: 3px; display: block; margin: 0 auto 15px auto; column-span: all; }
 
-                    /* Imagen Mapa de Exploración (Ocupa todo el ancho) */
                     .map-image-wrapper { column-span: all; margin-bottom: 20px; border: 1pt solid #cbd5e1; padding: 4px; background: #fdfbf7; }
                     .map-image { width: 100%; max-height: 400px; object-fit: contain; display: block; margin: 0 auto; }
                     .map-title { margin-top: 0; border: none; text-align: center; }
 
-                    /* Imágenes insertadas en WYSIWYG */
                     .columns-wrapper img { max-width: 100%; height: auto; border-radius: 3px; display: block; margin: 6px auto; border: 1pt solid #cbd5e1; padding: 2px;}
-
-                    /* Imagen de criatura / PNJ */
                     .npc-image { width: 100%; max-height: 120px; object-fit: contain; border: 1pt solid #cbd5e1; padding: 2px; margin-bottom: 6px; border-radius: 3px;}
 
-                    /* Tablas */
                     table { width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 4px; border-bottom: 2pt solid #1f2937; border-top: 2pt solid #1f2937; font-size: 9pt; }
                     th { background-color: #f1f5f9; padding: 4px; text-align: left; border-bottom: 1pt solid #94a3b8; font-size: 11pt;}
                     th:first-child { width: 30px; text-align: center; }
@@ -1119,7 +1251,6 @@
                     .table-desc { font-size: 9pt; color: #475569; font-style: italic; margin-bottom: 4px; }
                     .table-footer { font-size: 8pt; color: #64748b; margin-top: 4px; }
 
-                    /* Bloques PNJ / Enemigos */
                     .stat-block { border: 1pt solid #cbd5e1; padding: 8px; border-radius: 3px; background: #fff; box-shadow: 2px 2px 0px #e2e8f0;}
                     .stat-line { background: #f1f5f9; padding: 3px; border-radius: 2px; font-size: 8.5pt; font-weight: bold; color: #334155; margin-bottom: 6px;}
                     .npc-field { font-size: 9pt; margin-bottom: 3px; }
@@ -1127,15 +1258,21 @@
                     .secret-text { color: #475569; font-style: italic; }
                     .danger-text { color: #b91c1c; }
                     .clue-text { color: #0369a1; }
+
+                    /* Listas de Facción */
+                    .faction-list { margin-bottom: 10px; padding-left: 0; list-style: none;}
+                    .faction-list li { margin-bottom: 4px; font-size: 9.5pt;}
+                    .faction-list .check { font-family: monospace; font-size: 13pt; margin-right: 4px; color: #64748b; vertical-align: middle;}
+                    .faction-list .bullet { font-size: 12pt; margin-right: 4px; color: #1e293b; vertical-align: middle;}
                 </style>
             </head>
             <body>
-                <h1>${hex.title || `Aventura en Hexágono ${hex.label}`}</h1>
+                <h1>${hex.title || `Hexágono ${hex.label}`}</h1>
                 
                 ${hex.imageUrl ? `<img src="${hex.imageUrl}" class="main-image">` : ''}
-                ${hasText(hex.description) ? `<h2>Sinopsis</h2><div style="margin-bottom: 20px; column-span: all;">${hex.description}</div>` : ''}
+                ${hasText(hex.description) ? `<h2>${hex.hexType === 'adventure' ? 'Sinopsis' : 'Trasfondo de la Facción'}</h2><div style="margin-bottom: 20px; column-span: all;">${hex.description}</div>` : ''}
                 
-                ${hex.mapImageUrl ? `<div class="map-image-wrapper">
+                ${hex.mapImageUrl && hex.hexType === 'adventure' ? `<div class="map-image-wrapper">
                     <h2 class="map-title">Mapa de Exploración</h2>
                     <img src="${hex.mapImageUrl}" class="map-image">
                 </div>` : ''}
@@ -1143,87 +1280,102 @@
                 <div class="columns-wrapper">
             `;
 
-            // 1. Tablas
-            hex.customTables.forEach(table => {
-                if(table.rows.every(row => !row.trim())) return;
+            // Lógica según si es AVENTURA o FACCIÓN
+            if (hex.hexType === 'adventure') {
                 
-                let diceType = 'd' + table.rows.length;
-                if(table.rows.length === 36) diceType = 'd66';
-                
-                htmlContent += `<div class="avoid-break">`;
-                htmlContent += `<h3>${table.title}</h3>`;
-                if (hasText(table.description)) htmlContent += `<div class="table-desc">${table.description}</div>`;
-                
-                htmlContent += `<table><thead><tr><th>${diceType}</th><th>${table.columnName || 'Resultado'}</th></tr></thead><tbody>`;
-                table.rows.forEach((rowContent, idx) => {
-                    if(rowContent.trim()){
-                        let vIndex = idx + 1;
-                        if(table.rows.length === 36) vIndex = `${Math.floor(idx / 6) + 1}${(idx % 6) + 1}`;
-                        htmlContent += `<tr><td>${vIndex}</td><td>${rowContent}</td></tr>`;
-                    }
+                // 1. Tablas
+                hex.customTables.forEach(table => {
+                    if(table.rows.every(row => !row.trim())) return;
+                    let diceType = 'd' + table.rows.length;
+                    if(table.rows.length === 36) diceType = 'd66';
+                    
+                    htmlContent += `<div class="avoid-break">`;
+                    htmlContent += `<h3>${table.title}</h3>`;
+                    if (hasText(table.description)) htmlContent += `<div class="table-desc">${table.description}</div>`;
+                    
+                    htmlContent += `<table><thead><tr><th>${diceType}</th><th>${table.columnName || 'Resultado'}</th></tr></thead><tbody>`;
+                    table.rows.forEach((rowContent, idx) => {
+                        if(rowContent.trim()){
+                            let vIndex = idx + 1;
+                            if(table.rows.length === 36) vIndex = `${Math.floor(idx / 6) + 1}${(idx % 6) + 1}`;
+                            htmlContent += `<tr><td>${vIndex}</td><td>${rowContent}</td></tr>`;
+                        }
+                    });
+                    htmlContent += `</tbody></table>`;
+                    if (hasText(table.footer)) htmlContent += `<div class="table-footer">${table.footer}</div>`;
+                    htmlContent += `</div>`; 
                 });
-                htmlContent += `</tbody></table>`;
-                if (hasText(table.footer)) htmlContent += `<div class="table-footer">${table.footer}</div>`;
-                htmlContent += `</div>`; 
-            });
 
-            // 2. Enemigos
-            if(hex.enemies.some(en => en.name.trim() || en.type.trim() || en.attack.trim())) {
-                htmlContent += `<h2>Enemigos y Monstruos</h2>`;
-                hex.enemies.forEach(en => {
-                    if(!en.name.trim() && !en.type.trim() && !en.attack.trim() && !en.appearance.trim()) return;
+                // 2. Enemigos
+                if(hex.enemies && hex.enemies.some(en => en.name.trim() || en.type.trim() || en.attack.trim())) {
+                    htmlContent += `<h2>Enemigos y Monstruos</h2>`;
+                    hex.enemies.forEach(en => {
+                        if(!en.name.trim() && !en.type.trim() && !en.attack.trim() && !en.appearance.trim()) return;
+                        htmlContent += `<div class="avoid-break stat-block">`;
+                        if(en.imageUrl) htmlContent += `<img src="${en.imageUrl}" class="npc-image">`;
+                        htmlContent += `<h3>${en.name}</h3>`;
+                        if(en.type) htmlContent += `<div class="npc-field"><b>Tipo de criatura:</b> ${en.type}</div>`;
+                        if(en.appearance) htmlContent += `<div class="npc-field"><b>Apariencia:</b> ${en.appearance.replace(/\n/g, '<br>')}</div>`;
+                        if(en.behavior) htmlContent += `<div class="npc-field"><b>Comportamiento:</b> ${en.behavior.replace(/\n/g, '<br>')}</div>`;
+                        if(en.motivation) htmlContent += `<div class="npc-field"><b>Motivación:</b> ${en.motivation}</div>`;
+                        const armor = en.armor > 0 ? `, Armadura ${en.armor}` : '';
+                        htmlContent += `<div class="stat-line">${en.hp || '-'} PG, FUE ${en.str || '-'}, DES ${en.dex || '-'}, VOL ${en.wil || '-'}${armor}</div>`;
+                        if(en.attack) htmlContent += `<div class="npc-field"><b>Ataque:</b> ${en.attack}</div>`;
+                        if(en.special) htmlContent += `<div class="npc-field magic-text"><b>Especial:</b> ${en.special.replace(/\n/g, '<br>')}</div>`;
+                        if(en.weakness) htmlContent += `<div class="npc-field"><b>Debilidad:</b> ${en.weakness}</div>`;
+                        htmlContent += `</div>`;
+                    });
+                }
+
+                // 3. Lugares
+                if(hex.locations && hex.locations.some(loc => loc.name.trim() || loc.description.trim())) {
+                    htmlContent += `<h2>Lugares de Interés</h2>`;
+                    hex.locations.forEach((loc, i) => {
+                        if(!loc.name.trim() && !loc.description.trim()) return;
+                        htmlContent += `<div class="avoid-break" style="margin-bottom: 12px;">`;
+                        htmlContent += `<h3>${i+1}. ${loc.name}</h3>`;
+                        if(loc.description) htmlContent += `<div class="npc-field"><b>Descripción:</b> ${loc.description.replace(/\n/g, '<br>')}</div>`;
+                        if(loc.interesting) htmlContent += `<div class="npc-field"><b>Algo interesante:</b> ${loc.interesting}</div>`;
+                        if(loc.danger) htmlContent += `<div class="npc-field danger-text"><b>Un peligro:</b> ${loc.danger}</div>`;
+                        if(loc.clue) htmlContent += `<div class="npc-field clue-text"><b>Una pista:</b> ${loc.clue}</div>`;
+                        htmlContent += `</div>`;
+                    });
+                }
+            } else {
+                // EXPORTACIÓN MODO FACCIÓN
+                if(hex.faction) {
+                    const fac = hex.faction;
+                    const validObj = fac.objectives.filter(o => o.trim());
+                    const validRes = fac.resources.filter(r => r.trim());
                     
-                    htmlContent += `<div class="avoid-break stat-block">`;
-                    if(en.imageUrl) htmlContent += `<img src="${en.imageUrl}" class="npc-image">`;
-                    htmlContent += `<h3>${en.name}</h3>`;
-                    
-                    if(en.type) htmlContent += `<div class="npc-field"><b>Tipo de criatura:</b> ${en.type}</div>`;
-                    if(en.appearance) htmlContent += `<div class="npc-field"><b>Apariencia:</b> ${en.appearance.replace(/\n/g, '<br>')}</div>`;
-                    if(en.behavior) htmlContent += `<div class="npc-field"><b>Comportamiento:</b> ${en.behavior.replace(/\n/g, '<br>')}</div>`;
-                    if(en.motivation) htmlContent += `<div class="npc-field"><b>Motivación:</b> ${en.motivation}</div>`;
-                    
-                    const armor = en.armor > 0 ? `, Armadura ${en.armor}` : '';
-                    htmlContent += `<div class="stat-line">${en.hp || '-'} PG, FUE ${en.str || '-'}, DES ${en.dex || '-'}, VOL ${en.wil || '-'}${armor}</div>`;
-                    
-                    if(en.attack) htmlContent += `<div class="npc-field"><b>Ataque:</b> ${en.attack}</div>`;
-                    if(en.special) htmlContent += `<div class="npc-field magic-text"><b>Especial:</b> ${en.special.replace(/\n/g, '<br>')}</div>`;
-                    if(en.weakness) htmlContent += `<div class="npc-field"><b>Debilidad:</b> ${en.weakness}</div>`;
-                    
-                    htmlContent += `</div>`;
-                });
+                    if (validObj.length > 0) {
+                        htmlContent += `<div class="avoid-break"><h2>Objetivos y Planes</h2><ul class="faction-list">`;
+                        validObj.forEach(o => htmlContent += `<li><span class="check">☐</span> ${o}</li>`);
+                        htmlContent += `</ul></div>`;
+                    }
+                    if (validRes.length > 0) {
+                        htmlContent += `<div class="avoid-break"><h2>Recursos y Bases</h2><ul class="faction-list">`;
+                        validRes.forEach(r => htmlContent += `<li><span class="bullet">•</span> ${r}</li>`);
+                        htmlContent += `</ul></div>`;
+                    }
+                    if (hasText(fac.notes)) {
+                        htmlContent += `<div class="avoid-break"><h2>Notas y Relaciones</h2><div>${fac.notes}</div></div>`;
+                    }
+                }
             }
 
-            // 3. PNJs
-            if(hex.npcs.some(npc => npc.name.trim() || npc.appearance.trim() || npc.personality.trim())) {
-                htmlContent += `<h2>Personajes No Jugadores</h2>`;
+            // PNJs (Aplica para ambos tipos: Aventura o Miembros de Facción)
+            if(hex.npcs && hex.npcs.some(npc => npc.name.trim() || npc.appearance.trim() || npc.personality.trim())) {
+                htmlContent += `<h2>${hex.hexType === 'adventure' ? 'Personajes No Jugadores' : 'Miembros Clave'}</h2>`;
                 hex.npcs.forEach(npc => {
                     if(!npc.name.trim() && !npc.appearance.trim() && !npc.personality.trim()) return;
-                    
                     htmlContent += `<div class="avoid-break stat-block">`;
                     if(npc.imageUrl) htmlContent += `<img src="${npc.imageUrl}" class="npc-image">`;
                     htmlContent += `<h3>${npc.name}</h3>`;
-                    
                     if(npc.appearance) htmlContent += `<div class="npc-field"><b>Apariencia:</b> ${npc.appearance.replace(/\n/g, '<br>')}</div>`;
                     if(npc.personality) htmlContent += `<div class="npc-field"><b>Personalidad:</b> ${npc.personality}</div>`;
                     if(npc.motivation) htmlContent += `<div class="npc-field"><b>Motivación:</b> ${npc.motivation}</div>`;
                     if(npc.secret) htmlContent += `<div class="npc-field secret-text"><b>Secreto:</b> ${npc.secret.replace(/\n/g, '<br>')}</div>`;
-                    
-                    htmlContent += `</div>`;
-                });
-            }
-
-            // 4. Lugares
-            if(hex.locations.some(loc => loc.name.trim() || loc.description.trim())) {
-                htmlContent += `<h2>Lugares de Interés</h2>`;
-                hex.locations.forEach((loc, i) => {
-                    if(!loc.name.trim() && !loc.description.trim()) return;
-                    
-                    htmlContent += `<div class="avoid-break" style="margin-bottom: 12px;">`;
-                    htmlContent += `<h3>${i+1}. ${loc.name}</h3>`;
-                    if(loc.description) htmlContent += `<div class="npc-field"><b>Descripción:</b> ${loc.description.replace(/\n/g, '<br>')}</div>`;
-                    if(loc.interesting) htmlContent += `<div class="npc-field"><b>Algo interesante:</b> ${loc.interesting}</div>`;
-                    if(loc.danger) htmlContent += `<div class="npc-field danger-text"><b>Un peligro:</b> ${loc.danger}</div>`;
-                    if(loc.clue) htmlContent += `<div class="npc-field clue-text"><b>Una pista:</b> ${loc.clue}</div>`;
                     htmlContent += `</div>`;
                 });
             }

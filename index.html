@@ -115,7 +115,16 @@
         </div>
         
         <div class="p-4 border-t border-slate-200 bg-white">
-            <button id="exportMapBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm mb-2">
+            <!-- Selector MODO JUGADORES (Niebla de guerra) -->
+            <div class="mb-3 p-3 bg-slate-800 rounded-lg text-white shadow-inner">
+                <label class="flex items-center gap-2 cursor-pointer text-sm font-bold">
+                    <input type="checkbox" id="playerViewToggle" class="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-700 border-slate-600">
+                    Ver como Jugadores
+                </label>
+                <p class="text-[10px] text-slate-400 mt-1 leading-tight">Activa esto antes de exportar el mapa para ocultar los hexágonos "Sorpresa".</p>
+            </div>
+
+            <button id="exportMapBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded flex justify-center items-center gap-2 transition-colors shadow-sm mb-2 border border-slate-700">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 Descargar Imagen del Mapa
             </button>
@@ -183,6 +192,15 @@
                 
                 <!-- PESTAÑA: INFO -->
                 <div id="content-info" class="tab-content space-y-4">
+                    <!-- NUEVO: Toggle de Niebla de Guerra -->
+                    <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded">
+                        <input type="checkbox" id="hexHiddenCheckbox" class="w-4 h-4 text-red-600 rounded focus:ring-red-500 border-red-300 cursor-pointer">
+                        <label for="hexHiddenCheckbox" class="text-sm font-bold text-red-800 cursor-pointer leading-tight">
+                            Ocultar a los jugadores (Niebla de guerra)
+                            <span class="block text-[10px] font-normal text-red-600 mt-0.5">Si marcas esto, el hexágono se verá como un '?' en la Vista de Jugadores.</span>
+                        </label>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1" id="labelHexTitle">Título de la Aventura</label>
                         <input type="text" id="hexTitleInput" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none font-serif text-lg" placeholder="Ej. El Bosque Oscuro...">
@@ -215,7 +233,7 @@
                                 <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold">Título</button>
                                 <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs">Texto</button>
                                 <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                                <button type="button" onmousedown="event.preventDefault(); triggerRichTextImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen con Recorte">🖼️ Img</button>
+                                <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold">🖼️ Img</button>
                             </div>
                             <div contenteditable="true" id="hexDescInput" class="p-2 outline-none text-sm rich-text-content" style="min-height: 120px;" data-placeholder="..."></div>
                         </div>
@@ -315,7 +333,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE RECORTADOR DE IMAGEN (NUEVO) -->
+    <!-- MODAL DE RECORTADOR DE IMAGEN -->
     <div id="cropModal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-[110] backdrop-blur-sm">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl flex flex-col max-h-[90vh] mx-4">
             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-lg">
@@ -385,10 +403,9 @@
 
                 if (cropperInstance) cropperInstance.destroy();
                 
-                // Inicializar cropper
                 cropperInstance = new Cropper(imgTarget, {
-                    aspectRatio: NaN, // Libre por defecto
-                    viewMode: 2, // No salir del canvas
+                    aspectRatio: NaN,
+                    viewMode: 2,
                     autoCropArea: 0.9,
                     responsive: true,
                     background: false
@@ -413,21 +430,17 @@
 
         function applyCrop() {
             if (!cropperInstance || !cropCallback) return;
-            // Extraer el trozo recortado
             const canvas = cropperInstance.getCroppedCanvas({
-                maxWidth: 1500, // Limitar tamaño maximo
+                maxWidth: 1500,
                 maxHeight: 1500
             });
-            // Comprimir a JPEG 85% para ahorrar memoria
             const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-            
             cropCallback(croppedDataUrl);
             closeCropModal();
         }
 
-
         // --- UTILIDAD DE EDITOR ENRIQUECIDO ---
-        function triggerRichTextImageUpload(btn) {
+        function triggerImageUpload(btn) {
             const editor = btn.closest('.flex-col').querySelector('.rich-text-content');
             const input = document.createElement('input');
             input.type = 'file';
@@ -435,12 +448,10 @@
             input.onchange = e => {
                 const file = e.target.files[0];
                 if (!file) return;
-                
-                // Pasamos la imagen por el Cropper antes de insertarla
                 openUniversalCropModal(file, (croppedDataUrl) => {
                     editor.focus();
                     document.execCommand('insertImage', false, croppedDataUrl);
-                    editor.dispatchEvent(new Event('input')); // Disparar autoguardado
+                    editor.dispatchEvent(new Event('input')); 
                 });
             };
             input.click();
@@ -458,7 +469,7 @@
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold" title="Título">Título</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Texto Normal">Texto</button>
                     <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                    <button type="button" onmousedown="event.preventDefault(); triggerRichTextImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen con Recorte">🖼️ Img</button>
+                    <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen con Recorte">🖼️ Img</button>
                 </div>
                 <div contenteditable="true" 
                      class="p-2 outline-none text-sm rich-text-content" 
@@ -515,6 +526,7 @@
         let selectedHexId = null;
         let activeTool = 'cursor', isPainting = false;
         let isDragging = false, dragTarget = null, dragOffsetX = 0, dragOffsetY = 0;
+        let isPlayerView = false; // Estado global del modo de vista (Director vs Jugadores)
 
         const svgEl = document.getElementById('hexSvg');
         const mapArea = document.getElementById('mapArea');
@@ -606,6 +618,7 @@
             Object.values(hexes).forEach(hex => {
                 if (!hex.hexType) hex.hexType = 'adventure';
                 if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
+                if (hex.isHidden === undefined) hex.isHidden = false; // Compatibilidad ocultos
             });
 
             document.getElementById('mapTitleInput').value = mapTitle;
@@ -665,6 +678,16 @@
         }
 
         function initListeners() {
+            document.getElementById('playerViewToggle').addEventListener('change', e => { 
+                isPlayerView = e.target.checked; 
+                renderMap(); 
+            });
+
+            document.getElementById('hexHiddenCheckbox').addEventListener('change', e => { 
+                updateData('isHidden', e.target.checked); 
+                renderMap(); 
+            });
+
             document.getElementById('mapTitleInput').addEventListener('input', e => { mapTitle = e.target.value; document.getElementById('displayTitle').innerText = mapTitle || 'Sin Título'; debounceAutoSave();});
             document.getElementById('mapShapeSelect').addEventListener('change', e => { mapShape = e.target.value; document.getElementById('mapRowsContainer').classList.toggle('hidden', mapShape !== 'rectangle'); document.getElementById('mapSizeLabel').innerText = mapShape === 'flower' ? 'Radio' : 'Columnas'; debounceAutoSave();});
             document.getElementById('mapSizeInput').addEventListener('input', e => { mapSize = parseInt(e.target.value) || 1; debounceAutoSave();});
@@ -680,7 +703,6 @@
             
             document.getElementById('hexTerrainSelect').addEventListener('change', e => { updateData('terrain', e.target.value); renderMap(); debounceAutoSave();});
 
-            // Aplicamos el Recorte Universal a la Imagen Principal
             document.getElementById('hexImageInput').addEventListener('change', e => {
                 if (!selectedHexId || !e.target.files.length) return;
                 openUniversalCropModal(e.target.files[0], (croppedDataUrl) => {
@@ -695,7 +717,6 @@
                 updateData('imageUrl', null); document.getElementById('hexImageInput').value = ''; updateInspectorUI(); renderMap(); debounceAutoSave();
             });
 
-            // Aplicamos el Recorte Universal al Mapa de Exploración
             document.getElementById('hexMapImageInput').addEventListener('change', e => {
                 if (!selectedHexId || !e.target.files.length) return;
                 openUniversalCropModal(e.target.files[0], (croppedDataUrl) => {
@@ -1075,7 +1096,8 @@
             const center = { x: W * (q + r / 2), y: H * 0.75 * r };
             return {
                 id, q, r, label, x: center.x, y: center.y,
-                hexType: 'adventure', // 'adventure' o 'faction'
+                hexType: 'adventure', 
+                isHidden: false, // NUEVO
                 terrain: 'blank', imageUrl: null, mapImageUrl: null,
                 title: `Hexágono ${label}`, description: '',
                 customTables: [
@@ -1102,6 +1124,10 @@
             
             if (!hex.hexType) hex.hexType = 'adventure';
             if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
+            if (hex.isHidden === undefined) hex.isHidden = false;
+
+            // Actualizar checkbox de ocultamiento
+            document.getElementById('hexHiddenCheckbox').checked = hex.isHidden;
             
             document.getElementById('type-adv-btn').className = hex.hexType === 'adventure' ? 'flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200' : 'flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent';
             document.getElementById('type-fac-btn').className = hex.hexType === 'faction' ? 'flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200' : 'flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent';
@@ -1169,25 +1195,36 @@
                 minX = Math.min(minX, hex.x); maxX = Math.max(maxX, hex.x);
                 minY = Math.min(minY, hex.y); maxY = Math.max(maxY, hex.y);
                 const isSelected = selectedHexId === hex.id, t = TERRAINS[hex.terrain];
+                
                 const explored = isHexExplored(hex);
+                // Si estamos en vista de jugador y el hex está oculto, cuenta como no explorado (secreto total)
+                const isSecret = hex.isHidden && isPlayerView;
+                const hideContents = !explored || isSecret;
 
                 svgHTML += `<g data-id="${hex.id}" class="hex-group cursor-pointer transition-transform" transform="translate(${hex.x}, ${hex.y})">
                             <polygon points="${hexPoints}" fill="${t.color}" stroke="${isSelected ? '#10b981' : '#475569'}" stroke-width="${isSelected ? '4' : '1.5'}" stroke-linejoin="round" class="hover:brightness-95"></polygon>`;
 
-                if (!explored) {
+                if (hideContents) {
+                    // Completamente ofuscado por niebla de guerra
                     svgHTML += `<polygon points="${hexPoints}" fill="url(#unknown-pattern)" style="pointer-events: none;"></polygon>`;
-                }
-
-                if (hex.imageUrl) {
-                    svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
-                }
-                
-                if (explored) {
+                } else {
+                    if (hex.imageUrl) {
+                        svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
+                    }
+                    
                     svgHTML += `<text x="${-W/2 + 8}" y="${-R/2 + 12}" text-anchor="start" font-family="sans-serif" font-size="8px" font-weight="bold" fill="${hex.imageUrl ? '#ffffff' : '#475569'}" opacity="${hex.imageUrl ? '1' : '0.8'}" style="pointer-events: none; ${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
-                }
-                
-                if (t.icon && !hex.imageUrl && explored) {
-                    svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" font-size="20px" style="pointer-events: none;">${t.icon}</text>`;
+                    
+                    if (t.icon && !hex.imageUrl) {
+                        svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" font-size="20px" style="pointer-events: none;">${t.icon}</text>`;
+                    }
+                    
+                    // Indicador visual para el Director de Juego de que este hexágono está marcado como oculto
+                    if (hex.isHidden && !isPlayerView) {
+                        svgHTML += `<g transform="translate(${W/2 - 10}, ${-R/2 + 8})" style="pointer-events: none;">
+                            <circle cx="0" cy="0" r="7" fill="#ef4444" opacity="0.9"></circle>
+                            <text x="0" y="0" font-size="9px" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">?</text>
+                        </g>`;
+                    }
                 }
                 
                 svgHTML += `</g>`;
@@ -1215,9 +1252,10 @@
             const vH = viewBox[3];
 
             const hexList = Object.values(hexes).sort((a, b) => a.label - b.label);
-            const exploredHexes = hexList.filter(h => isHexExplored(h));
+            // Filtramos la leyenda respetando la vista de jugador y secretos
+            const visibleHexes = hexList.filter(h => isHexExplored(h) && !(isPlayerView && h.isHidden));
             
-            const legendItems = exploredHexes.map(h => {
+            const legendItems = visibleHexes.map(h => {
                 let title = h.title.trim();
                 const defaultTitle = `Hexágono ${h.label}`;
                 if (title === defaultTitle || title === '') title = '?';
@@ -1309,6 +1347,7 @@
             if(!selectedHexId) return;
             const hex = hexes[selectedHexId];
             
+            // Obtener familia de fuentes elegida
             const selectEl = document.getElementById('pdfFontSelect');
             const titleFont = selectEl.value; 
             const textFont = selectEl.options[selectEl.selectedIndex].getAttribute('data-text'); 
@@ -1377,7 +1416,7 @@
                 ${hasText(hex.description) ? `<h2>${hex.hexType === 'adventure' ? 'Sinopsis' : 'Trasfondo de la Facción'}</h2><div style="margin-bottom: 20px; column-span: all;">${hex.description}</div>` : ''}
                 
                 ${hex.mapImageUrl && hex.hexType === 'adventure' ? `<div class="map-image-wrapper">
-                    <h2 class="map-title">Mapa de Exploración</h2>
+                    <h2 class="map-title title-font">Mapa de Exploración</h2>
                     <img src="${hex.mapImageUrl}" class="map-image">
                 </div>` : ''}
 

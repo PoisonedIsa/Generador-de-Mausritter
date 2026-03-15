@@ -6,7 +6,7 @@
     <title>Maquetador Mausritter y Creador de Aventuras</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts (Añadida UnifrakturMaguntia para Old-English) -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -17,7 +17,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Placeholder para divs contenteditable */
+        /* Placeholder para divs contenteditable y estilos WYSIWYG */
         .rich-text-content:empty:before {
             content: attr(data-placeholder);
             color: #94a3b8;
@@ -26,6 +26,8 @@
         }
         .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
         .rich-text-content h4 { font-weight: bold; font-size: 1.1em; margin-top: 0.5rem; margin-bottom: 0.25rem; }
+        /* Estilo para las imágenes insertadas en el texto */
+        .rich-text-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 8px auto; display: block; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
@@ -41,7 +43,6 @@
                 <p class="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wider">Maquetador de Campañas</p>
             </div>
             
-            <!-- Botón Oculto Mensaje -->
             <button onclick="openCopyModal()" class="text-slate-300 hover:text-slate-500 cursor-pointer transition-colors px-2" title="Mensaje Oculto">⌘</button>
         </div>
 
@@ -166,24 +167,32 @@
                         <label class="block text-sm font-bold text-slate-700 mb-1">Terreno Base</label>
                         <select id="hexTerrainSelect" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none"></select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Imagen Principal (Opcional)</label>
-                        <input type="file" id="hexImageInput" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-slate-50">
-                        <button id="removeImageBtn" class="mt-2 text-xs font-bold text-red-500 hover:text-red-700 hidden flex items-center gap-1 transition-colors">
-                            Eliminar Imagen Actual
-                        </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Imagen Principal</label>
+                            <input type="file" id="hexImageInput" accept="image/*" class="w-full p-1 border border-slate-300 rounded outline-none text-xs bg-slate-50">
+                            <button id="removeImageBtn" class="mt-1 text-[10px] font-bold text-red-500 hover:text-red-700 hidden">Quitar Imagen</button>
+                        </div>
+                        <div>
+                            <!-- SUBMENÚ MAPA DE EXPLORACIÓN -->
+                            <label class="block text-xs font-bold text-emerald-700 mb-1">Mapa del Lugar</label>
+                            <input type="file" id="hexMapImageInput" accept="image/*" class="w-full p-1 border border-emerald-300 bg-emerald-50 rounded outline-none text-xs">
+                            <button id="removeMapImageBtn" class="mt-1 text-[10px] font-bold text-red-500 hover:text-red-700 hidden">Quitar Mapa</button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Sinopsis / Descripción General</label>
                         <div class="border border-slate-300 rounded focus-within:border-emerald-500 overflow-hidden flex flex-col bg-white shadow-sm">
                             <div class="bg-slate-100 border-b border-slate-300 flex gap-1 p-1 items-center">
-                                <button type="button" onclick="document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs" title="Negrita">B</button>
-                                <button type="button" onclick="document.execCommand('italic',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded italic text-xs" title="Cursiva">I</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs" title="Negrita">B</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded italic text-xs" title="Cursiva">I</button>
                                 <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                                <button type="button" onclick="document.execCommand('insertUnorderedList',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Viñetas">• Lista</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('insertUnorderedList',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Viñetas">• Lista</button>
                                 <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                                <button type="button" onclick="document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold" title="Título">Título</button>
-                                <button type="button" onclick="document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Texto Normal">Texto</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold" title="Título">Título</button>
+                                <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Texto Normal">Texto</button>
+                                <div class="w-px h-3 bg-slate-300 mx-1"></div>
+                                <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen dentro del texto">🖼️ Img</button>
                             </div>
                             <div contenteditable="true" id="hexDescInput" class="p-2 outline-none text-sm rich-text-content" style="min-height: 120px;" data-placeholder="Describe el ambiente, la historia principal..."></div>
                         </div>
@@ -209,7 +218,6 @@
 
                 <!-- PESTAÑA: PERSONAJES (ENEMIGOS Y NPCs) -->
                 <div id="content-characters" class="tab-content hidden space-y-6">
-                    
                     <!-- Sección Enemigos -->
                     <div>
                         <h3 class="font-bold text-slate-700 mb-2 border-b-2 border-slate-200 pb-1 flex justify-between items-center">
@@ -229,7 +237,6 @@
                         <p class="text-[11px] text-slate-500 mb-3">Enfocado en interacciones sociales, personalidad y secretos.</p>
                         <div id="npcsList" class="space-y-4"></div>
                     </div>
-
                 </div>
 
                 <!-- PESTAÑA: LUGARES -->
@@ -250,7 +257,8 @@
                     <select id="pdfFontSelect" class="p-1 border border-slate-300 rounded outline-none focus:border-emerald-500 bg-slate-50">
                         <option value="font-family: 'Merriweather', serif;" data-text="font-family: 'Inter', sans-serif;">Clásica (Merriweather)</option>
                         <option value="font-family: 'Crimson Text', serif;" data-text="font-family: 'Crimson Text', serif;">Antigua (Crimson Text)</option>
-                        <option value="font-family: 'UnifrakturMaguntia', serif;" data-text="font-family: 'UnifrakturMaguntia', serif;">Gótica / Old-English</option>
+                        <!-- Gótica pero con texto en Crimson Text para que los párrafos se puedan leer -->
+                        <option value="font-family: 'UnifrakturMaguntia', serif;" data-text="font-family: 'Crimson Text', serif;">Gótica / Old-English</option>
                         <option value="font-family: 'Courier Prime', monospace;" data-text="font-family: 'Courier Prime', monospace;">Mecanografiada (Courier)</option>
                     </select>
                 </div>
@@ -285,17 +293,38 @@
 
     <script>
         // --- UTILIDAD DE EDITOR ENRIQUECIDO ---
+        function triggerImageUpload(btn) {
+            const editor = btn.closest('.flex-col').querySelector('.rich-text-content');
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    editor.focus();
+                    document.execCommand('insertImage', false, ev.target.result);
+                    editor.dispatchEvent(new Event('input')); // Activa el autoguardado
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+
         function createRichTextEditor(value, onInputAction, placeholder, minHeight = "60px") {
             return `
             <div class="border border-slate-300 rounded focus-within:border-emerald-500 overflow-hidden flex flex-col bg-white shadow-sm">
                 <div class="bg-slate-100 border-b border-slate-300 flex gap-1 p-1 items-center">
-                    <button type="button" onclick="document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs" title="Negrita">B</button>
-                    <button type="button" onclick="document.execCommand('italic',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded italic text-xs" title="Cursiva">I</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('bold',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded font-bold text-xs" title="Negrita">B</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('italic',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded italic text-xs" title="Cursiva">I</button>
                     <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                    <button type="button" onclick="document.execCommand('insertUnorderedList',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Viñetas">• Lista</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('insertUnorderedList',false,null)" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Viñetas">• Lista</button>
                     <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                    <button type="button" onclick="document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold" title="Título">Título</button>
-                    <button type="button" onclick="document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Texto Normal">Texto</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold" title="Título">Título</button>
+                    <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Texto Normal">Texto</button>
+                    <div class="w-px h-3 bg-slate-300 mx-1"></div>
+                    <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen">🖼️ Img</button>
                 </div>
                 <div contenteditable="true" 
                      class="p-2 outline-none text-sm rich-text-content" 
@@ -359,11 +388,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initToolsUI(); 
             initListeners(); 
-            
-            // Intentar cargar autoguardado al iniciar
-            if (!loadAutoSave()) {
-                generateMap(); // Generar mapa nuevo solo si no hay autoguardado
-            }
+            if (!loadAutoSave()) generateMap();
         });
 
         // --- SISTEMA DE GUARDADO ---
@@ -382,6 +407,7 @@
             let cleanData = JSON.parse(JSON.stringify(dataObj));
             for (let id in cleanData.hexes) {
                 cleanData.hexes[id].imageUrl = null; 
+                cleanData.hexes[id].mapImageUrl = null; 
                 cleanData.hexes[id].enemies.forEach(e => e.imageUrl = null);
                 cleanData.hexes[id].npcs.forEach(n => n.imageUrl = null);
             }
@@ -394,8 +420,8 @@
                 const safeData = stripImagesForLocalSave(projectData);
                 localStorage.setItem('mausritterAutoSave', JSON.stringify(safeData));
             } catch (e) {
-                console.warn("Límite memoria superado en autoguardado.", e);
-                document.getElementById('autoSaveStatus').innerText = "Error: Límite memoria. Guarda manual.";
+                console.warn("Límite memoria superado.", e);
+                document.getElementById('autoSaveStatus').innerText = "Error memoria. Guarda manual.";
             }
         }
 
@@ -456,8 +482,6 @@
             selectedHexId = null; updateInspectorUI(); renderMap();
         }
 
-        // ------------------------------------
-
         function initToolsUI() {
             let toolsHTML = `
                 <button onclick="setActiveTool('cursor')" id="tool-cursor" class="tool-btn p-2 rounded border text-sm flex items-center gap-2 bg-emerald-100 border-emerald-500 font-bold col-span-1">
@@ -514,6 +538,17 @@
                 updateData('imageUrl', null); document.getElementById('hexImageInput').value = ''; updateInspectorUI(); renderMap(); debounceAutoSave();
             });
 
+            // Mapa Secundario
+            document.getElementById('hexMapImageInput').addEventListener('change', e => {
+                if (!selectedHexId || !e.target.files.length) return;
+                const reader = new FileReader();
+                reader.onload = ev => { updateData('mapImageUrl', ev.target.result); updateInspectorUI(); debounceAutoSave();};
+                reader.readAsDataURL(e.target.files[0]);
+            });
+            document.getElementById('removeMapImageBtn').addEventListener('click', () => {
+                updateData('mapImageUrl', null); document.getElementById('hexMapImageInput').value = ''; updateInspectorUI(); debounceAutoSave();
+            });
+
             function getSVGPoint(evt) {
                 const pt = svgEl.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY;
                 return pt.matrixTransform(svgEl.getScreenCTM().inverse());
@@ -532,10 +567,8 @@
                         const pt = getSVGPoint(e); 
                         dragOffsetX = pt.x - dragTarget.x; 
                         dragOffsetY = pt.y - dragTarget.y;
-                        
                         dragTarget.freeX = dragTarget.x;
                         dragTarget.freeY = dragTarget.y;
-                        
                         g.parentNode.appendChild(g);
                     } else { isPainting = true; handleHexInteract(hexId); }
                 }
@@ -554,7 +587,6 @@
                     
                     const { q, r } = pixelToAxial(dragTarget.freeX, dragTarget.freeY);
                     const exactCenter = getHexCenter(q, r);
-                    
                     const g = document.querySelector(`g.hex-group[data-id="${dragTarget.id}"]`);
                     if (g) g.setAttribute('transform', `translate(${exactCenter.x}, ${exactCenter.y})`);
                 }
@@ -565,19 +597,11 @@
                     const { q: newQ, r: newR } = pixelToAxial(dragTarget.freeX, dragTarget.freeY);
                     const isOccupied = Object.values(hexes).some(h => h.id !== dragTarget.id && h.q === newQ && h.r === newR);
                     
-                    if (!isOccupied) { 
-                        dragTarget.q = newQ; 
-                        dragTarget.r = newR; 
-                    }
+                    if (!isOccupied) { dragTarget.q = newQ; dragTarget.r = newR; }
                     
                     const exactCenter = getHexCenter(dragTarget.q, dragTarget.r);
-                    dragTarget.x = exactCenter.x; 
-                    dragTarget.y = exactCenter.y;
-                    
-                    isDragging = false; 
-                    dragTarget = null; 
-                    renderMap(); 
-                    debounceAutoSave();
+                    dragTarget.x = exactCenter.x; dragTarget.y = exactCenter.y;
+                    isDragging = false; dragTarget = null; renderMap(); debounceAutoSave();
                 }
             }
             
@@ -613,8 +637,6 @@
         function updateTableRow(tableIndex, rowIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].rows[rowIndex] = value; debounceAutoSave();}
         function updateTableTitle(tableIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].title = value; debounceAutoSave();}
         function updateTableColumnName(tableIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].columnName = value; debounceAutoSave();}
-        function updateTableDescription(tableIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].description = value; debounceAutoSave();}
-        function updateTableFooter(tableIndex, value) { if(!selectedHexId) return; hexes[selectedHexId].customTables[tableIndex].footer = value; debounceAutoSave();}
 
         function renderTablesUI() {
             const container = document.getElementById('tablesListContainer');
@@ -630,7 +652,7 @@
                     <div class="p-2 bg-slate-100 border-b border-slate-300 flex flex-col gap-2 pr-10">
                          <input type="text" value="${table.title}" onchange="updateTableTitle(${tIndex}, this.value)" class="w-full font-serif font-black text-lg text-slate-800 bg-transparent outline-none focus:border-b-2 border-emerald-500" placeholder="Título (ej. Encuentros)">
                          
-                         ${createRichTextEditor(table.description, `updateTableDescription(${tIndex}, this.innerHTML)`, 'Párrafo sobre la tabla (Opcional)...', '60px')}
+                         ${createRichTextEditor(table.description, `if(selectedHexId){hexes[selectedHexId].customTables[${tIndex}].description = this.innerHTML;}`, 'Párrafo sobre la tabla (Opcional)...', '60px')}
 
                          <div class="flex items-center gap-2">
                              <span class="text-xs font-bold text-slate-500">Columna:</span>
@@ -650,7 +672,7 @@
                 });
                 html += `</div>
                     <div class="p-2 bg-slate-50 border-t border-slate-200">
-                        ${createRichTextEditor(table.footer, `updateTableFooter(${tIndex}, this.innerHTML)`, 'Nota al pie de la tabla (Opcional)...', '40px')}
+                        ${createRichTextEditor(table.footer, `if(selectedHexId){hexes[selectedHexId].customTables[${tIndex}].footer = this.innerHTML;}`, 'Nota al pie de la tabla (Opcional)...', '40px')}
                     </div>
                 </div>`;
             });
@@ -831,7 +853,7 @@
             const center = { x: W * (q + r / 2), y: H * 0.75 * r };
             return {
                 id, q, r, label, x: center.x, y: center.y,
-                terrain: 'blank', imageUrl: null,
+                terrain: 'blank', imageUrl: null, mapImageUrl: null,
                 title: `Aventura en Hexágono ${label}`, description: '',
                 customTables: [
                     { id: 't1', title: 'Ganchos', columnName: 'Gancho', description: '', footer: '', rows: ['','','','','',''] },
@@ -863,10 +885,13 @@
             if (hex.imageUrl) document.getElementById('removeImageBtn').classList.remove('hidden');
             else { document.getElementById('removeImageBtn').classList.add('hidden'); document.getElementById('hexImageInput').value = ''; }
 
+            // Actualizar interfaz del mapa de exploración
+            if (hex.mapImageUrl) document.getElementById('removeMapImageBtn').classList.remove('hidden');
+            else { document.getElementById('removeMapImageBtn').classList.add('hidden'); document.getElementById('hexMapImageInput').value = ''; }
+
             renderTablesUI(); renderEnemiesUI(); renderNPCsUI(); renderLocationsUI();
         }
 
-        // NUEVO: Función auxiliar para saber si un hexágono tiene contenido
         function isHexExplored(hex) {
             if (hex.terrain !== 'blank') return true;
             if (hex.title.trim() !== '' && hex.title !== `Aventura en Hexágono ${hex.label}`) return true;
@@ -882,8 +907,6 @@
             const hexArray = Object.values(hexes);
             if (hexArray.length === 0) return;
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            
-            // Añadido el patrón de interrogaciones en las definiciones (defs)
             let svgHTML = `<defs>
                 <clipPath id="hex-clip"><polygon points="${hexPoints}"></polygon></clipPath>
                 <pattern id="unknown-pattern" x="0" y="0" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(20)">
@@ -900,7 +923,6 @@
                 svgHTML += `<g data-id="${hex.id}" class="hex-group cursor-pointer transition-transform" transform="translate(${hex.x}, ${hex.y})">
                             <polygon points="${hexPoints}" fill="${t.color}" stroke="${isSelected ? '#10b981' : '#475569'}" stroke-width="${isSelected ? '4' : '1.5'}" stroke-linejoin="round" class="hover:brightness-95"></polygon>`;
 
-                // Si NO está explorado, dibujamos el entramado de ? y no mostramos su icono de terreno base
                 if (!explored) {
                     svgHTML += `<polygon points="${hexPoints}" fill="url(#unknown-pattern)" style="pointer-events: none;"></polygon>`;
                 }
@@ -909,12 +931,10 @@
                     svgHTML += `<image href="${hex.imageUrl}" x="${-W/2}" y="${-R}" width="${W}" height="${H}" clip-path="url(#hex-clip)" preserveAspectRatio="xMidYMid slice" opacity="0.9" pointer-events="none"></image>`;
                 }
                 
-                // Solo renderizamos el número de la esquina si está explorado
                 if (explored) {
                     svgHTML += `<text x="${-W/2 + 8}" y="${-R/2 + 12}" text-anchor="start" font-family="sans-serif" font-size="8px" font-weight="bold" fill="${hex.imageUrl ? '#ffffff' : '#475569'}" opacity="${hex.imageUrl ? '1' : '0.8'}" style="pointer-events: none; ${hex.imageUrl ? 'text-shadow: 0px 0px 4px black, 0px 0px 2px black;' : ''}">${hex.label}</text>`;
                 }
                 
-                // Renderizar icono si tiene terreno asignado (y está explorado visualmente)
                 if (t.icon && !hex.imageUrl && explored) {
                     svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" font-size="20px" style="pointer-events: none;">${t.icon}</text>`;
                 }
@@ -944,16 +964,12 @@
             const vH = viewBox[3];
 
             const hexList = Object.values(hexes).sort((a, b) => a.label - b.label);
-            
-            // Solo mostramos en la tabla los hexágonos que hayan sido explorados/editados
             const exploredHexes = hexList.filter(h => isHexExplored(h));
             
             const legendItems = exploredHexes.map(h => {
                 let title = h.title.trim();
                 const defaultTitle = `Aventura en Hexágono ${h.label}`;
-                if (title === defaultTitle || title === '') {
-                    title = '?';
-                }
+                if (title === defaultTitle || title === '') title = '?';
                 return `${h.label}.- ${title}`;
             });
 
@@ -1007,9 +1023,7 @@
                         
                         let text = item;
                         if (ctx.measureText(text).width > colWidth - 20) {
-                            while(text.length > 0 && ctx.measureText(text + '...').width > colWidth - 20) {
-                                text = text.slice(0, -1);
-                            }
+                            while(text.length > 0 && ctx.measureText(text + '...').width > colWidth - 20) text = text.slice(0, -1);
                             text += '...';
                         }
                         ctx.fillText(text, x, y);
@@ -1062,11 +1076,11 @@
                     body { ${textFont} color: #111827; line-height: 1.4; font-size: 10pt; background: #fff; margin: 0; padding: 0; }
                     
                     /* Tipografía para Títulos */
-                    h1, h2, h3, .title-font { ${titleFont} }
+                    h1, h2, h3, .title-font, th { ${titleFont} }
                     
-                    h1 { font-size: 24pt; font-weight: 900; border-bottom: 2pt solid #111827; padding-bottom: 5px; margin-top: 0; margin-bottom: 15px; }
-                    h2 { font-size: 14pt; font-weight: 700; border-bottom: 1pt solid #cbd5e1; margin-top: 15px; margin-bottom: 8px; padding-bottom: 2px; break-after: avoid; page-break-after: avoid;}
-                    h3 { font-size: 12pt; font-weight: bold; margin-bottom: 4px; color: #111827; }
+                    h1 { font-size: 24pt; font-weight: normal; border-bottom: 2pt solid #111827; padding-bottom: 5px; margin-top: 0; margin-bottom: 15px; }
+                    h2 { font-size: 16pt; font-weight: normal; border-bottom: 1pt solid #cbd5e1; margin-top: 15px; margin-bottom: 8px; padding-bottom: 2px; break-after: avoid; page-break-after: avoid;}
+                    h3 { font-size: 14pt; font-weight: normal; margin-bottom: 4px; color: #111827; }
                     p, div, ul { margin-bottom: 8px; }
                     ul { padding-left: 20px; }
                     b, strong { font-weight: 700; color: #000; }
@@ -1083,12 +1097,20 @@
                     /* Imagen Principal de Aventura */
                     .main-image { max-width: 100%; max-height: 250px; object-fit: cover; border: 1pt solid #334155; padding: 3px; display: block; margin: 0 auto 15px auto; column-span: all; }
 
+                    /* Imagen Mapa de Exploración (Ocupa todo el ancho) */
+                    .map-image-wrapper { column-span: all; margin-bottom: 20px; border: 1pt solid #cbd5e1; padding: 4px; background: #fdfbf7; }
+                    .map-image { width: 100%; max-height: 400px; object-fit: contain; display: block; margin: 0 auto; }
+                    .map-title { margin-top: 0; border: none; text-align: center; }
+
+                    /* Imágenes insertadas en WYSIWYG */
+                    .columns-wrapper img { max-width: 100%; height: auto; border-radius: 3px; display: block; margin: 6px auto; border: 1pt solid #cbd5e1; padding: 2px;}
+
                     /* Imagen de criatura / PNJ */
                     .npc-image { width: 100%; max-height: 120px; object-fit: contain; border: 1pt solid #cbd5e1; padding: 2px; margin-bottom: 6px; border-radius: 3px;}
 
                     /* Tablas */
                     table { width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 4px; border-bottom: 2pt solid #1f2937; border-top: 2pt solid #1f2937; font-size: 9pt; }
-                    th { background-color: #f1f5f9; padding: 4px; text-align: left; border-bottom: 1pt solid #94a3b8; ${titleFont} }
+                    th { background-color: #f1f5f9; padding: 4px; text-align: left; border-bottom: 1pt solid #94a3b8; font-size: 11pt;}
                     th:first-child { width: 30px; text-align: center; }
                     td { padding: 4px; vertical-align: top; }
                     td:first-child { font-weight: bold; text-align: center; }
@@ -1113,6 +1135,11 @@
                 ${hex.imageUrl ? `<img src="${hex.imageUrl}" class="main-image">` : ''}
                 ${hasText(hex.description) ? `<h2>Sinopsis</h2><div style="margin-bottom: 20px; column-span: all;">${hex.description}</div>` : ''}
                 
+                ${hex.mapImageUrl ? `<div class="map-image-wrapper">
+                    <h2 class="map-title">Mapa de Exploración</h2>
+                    <img src="${hex.mapImageUrl}" class="map-image">
+                </div>` : ''}
+
                 <div class="columns-wrapper">
             `;
 

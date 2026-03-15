@@ -11,8 +11,6 @@
     <!-- Cropper.js (Para recorte de imágenes) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    <!-- HTML2PDF para exportar a PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -32,7 +30,21 @@
         }
         .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
         .rich-text-content h4 { font-weight: bold; font-size: 1.1em; margin-top: 0.5rem; margin-bottom: 0.25rem; }
-        .rich-text-content img { max-width: 100%; height: auto; border-radius: 4px; margin: 8px auto; display: block; border: 1px solid #e2e8f0; }
+        
+        /* Imágenes dentro del editor (Centrado estricto) */
+        .rich-text-content img { 
+            max-width: 90% !important; 
+            height: auto !important; 
+            border-radius: 4px !important; 
+            margin-left: auto !important; 
+            margin-right: auto !important; 
+            margin-top: 15px !important; 
+            margin-bottom: 15px !important; 
+            display: block !important; 
+            border: 1px solid #cbd5e1 !important; 
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.05) !important;
+            clear: both !important;
+        }
         
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
@@ -192,7 +204,7 @@
                 
                 <!-- PESTAÑA: INFO -->
                 <div id="content-info" class="tab-content space-y-4">
-                    <!-- NUEVO: Toggle de Niebla de Guerra -->
+                    <!-- Toggle de Niebla de Guerra -->
                     <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded">
                         <input type="checkbox" id="hexHiddenCheckbox" class="w-4 h-4 text-red-600 rounded focus:ring-red-500 border-red-300 cursor-pointer">
                         <label for="hexHiddenCheckbox" class="text-sm font-bold text-red-800 cursor-pointer leading-tight">
@@ -316,6 +328,9 @@
             
             <!-- Botón Exportar PDF -->
             <div class="p-4 border-t border-slate-200 bg-white flex flex-col gap-2 shrink-0">
+                <p class="text-[10px] text-red-600 font-bold text-center leading-tight mb-1">
+                    Nota: Para ver el número de página en tu impresión final, activa "Encabezados y pies de página" en las opciones del navegador al exportar.
+                </p>
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-slate-600 font-medium">Fuente del PDF:</span>
                     <select id="pdfFontSelect" class="p-1 border border-slate-300 rounded outline-none focus:border-emerald-500 bg-slate-50">
@@ -526,7 +541,7 @@
         let selectedHexId = null;
         let activeTool = 'cursor', isPainting = false;
         let isDragging = false, dragTarget = null, dragOffsetX = 0, dragOffsetY = 0;
-        let isPlayerView = false; // Estado global del modo de vista (Director vs Jugadores)
+        let isPlayerView = false; 
 
         const svgEl = document.getElementById('hexSvg');
         const mapArea = document.getElementById('mapArea');
@@ -618,7 +633,7 @@
             Object.values(hexes).forEach(hex => {
                 if (!hex.hexType) hex.hexType = 'adventure';
                 if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
-                if (hex.isHidden === undefined) hex.isHidden = false; // Compatibilidad ocultos
+                if (hex.isHidden === undefined) hex.isHidden = false; 
             });
 
             document.getElementById('mapTitleInput').value = mapTitle;
@@ -1097,7 +1112,7 @@
             return {
                 id, q, r, label, x: center.x, y: center.y,
                 hexType: 'adventure', 
-                isHidden: false, // NUEVO
+                isHidden: false,
                 terrain: 'blank', imageUrl: null, mapImageUrl: null,
                 title: `Hexágono ${label}`, description: '',
                 customTables: [
@@ -1126,7 +1141,6 @@
             if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
             if (hex.isHidden === undefined) hex.isHidden = false;
 
-            // Actualizar checkbox de ocultamiento
             document.getElementById('hexHiddenCheckbox').checked = hex.isHidden;
             
             document.getElementById('type-adv-btn').className = hex.hexType === 'adventure' ? 'flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200' : 'flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent';
@@ -1197,7 +1211,6 @@
                 const isSelected = selectedHexId === hex.id, t = TERRAINS[hex.terrain];
                 
                 const explored = isHexExplored(hex);
-                // Si estamos en vista de jugador y el hex está oculto, cuenta como no explorado (secreto total)
                 const isSecret = hex.isHidden && isPlayerView;
                 const hideContents = !explored || isSecret;
 
@@ -1205,7 +1218,6 @@
                             <polygon points="${hexPoints}" fill="${t.color}" stroke="${isSelected ? '#10b981' : '#475569'}" stroke-width="${isSelected ? '4' : '1.5'}" stroke-linejoin="round" class="hover:brightness-95"></polygon>`;
 
                 if (hideContents) {
-                    // Completamente ofuscado por niebla de guerra
                     svgHTML += `<polygon points="${hexPoints}" fill="url(#unknown-pattern)" style="pointer-events: none;"></polygon>`;
                 } else {
                     if (hex.imageUrl) {
@@ -1218,7 +1230,6 @@
                         svgHTML += `<text x="0" y="8" text-anchor="middle" dominant-baseline="middle" font-size="20px" style="pointer-events: none;">${t.icon}</text>`;
                     }
                     
-                    // Indicador visual para el Director de Juego de que este hexágono está marcado como oculto
                     if (hex.isHidden && !isPlayerView) {
                         svgHTML += `<g transform="translate(${W/2 - 10}, ${-R/2 + 8})" style="pointer-events: none;">
                             <circle cx="0" cy="0" r="7" fill="#ef4444" opacity="0.9"></circle>
@@ -1252,7 +1263,6 @@
             const vH = viewBox[3];
 
             const hexList = Object.values(hexes).sort((a, b) => a.label - b.label);
-            // Filtramos la leyenda respetando la vista de jugador y secretos
             const visibleHexes = hexList.filter(h => isHexExplored(h) && !(isPlayerView && h.isHidden));
             
             const legendItems = visibleHexes.map(h => {
@@ -1347,7 +1357,6 @@
             if(!selectedHexId) return;
             const hex = hexes[selectedHexId];
             
-            // Obtener familia de fuentes elegida
             const selectEl = document.getElementById('pdfFontSelect');
             const titleFont = selectEl.value; 
             const textFont = selectEl.options[selectEl.selectedIndex].getAttribute('data-text'); 
@@ -1360,67 +1369,175 @@
                 <title>${hex.title || `Hexágono ${hex.label}`}</title>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
                 <style>
-                    @page { size: A4; margin: 15mm; }
-                    body { ${textFont} color: #111827; line-height: 1.4; font-size: 10pt; background: #fff; margin: 0; padding: 0; }
+                    @media print {
+                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    }
+
+                    @page { 
+                        size: A4; 
+                        margin: 15mm 15mm 20mm 15mm; 
+                        @bottom-right {
+                            content: "Página " counter(page);
+                            font-family: 'Inter', sans-serif;
+                            font-size: 9pt;
+                            color: #64748b;
+                        }
+                    }
                     
-                    h1, h2, h3, .title-font, th { ${titleFont} }
+                    body { ${textFont} color: #1a202c; line-height: 1.5; font-size: 10pt; background: #fdfbf7; margin: 0; padding: 0; }
                     
-                    h1 { font-size: 24pt; font-weight: normal; border-bottom: 2pt solid #111827; padding-bottom: 5px; margin-top: 0; margin-bottom: 15px; }
-                    h2 { font-size: 16pt; font-weight: normal; border-bottom: 1pt solid #cbd5e1; margin-top: 15px; margin-bottom: 8px; padding-bottom: 2px; break-after: avoid; page-break-after: avoid;}
-                    h3 { font-size: 14pt; font-weight: normal; margin-bottom: 4px; color: #111827; }
-                    p, div, ul { margin-bottom: 8px; }
-                    ul { padding-left: 20px; }
+                    .page-container {
+                        border: 3px solid #1e293b;
+                        padding: 25px;
+                        min-height: calc(100vh - 40px);
+                        position: relative;
+                        background: #fffcf8;
+                        outline: 1px solid #1e293b;
+                        outline-offset: -6px;
+                    }
+                    
+                    h1, h2, h3, .title-font, th { ${titleFont} color: #0f172a; }
+                    
+                    h1 { 
+                        font-size: 26pt; 
+                        font-weight: 900; 
+                        text-align: center; 
+                        text-transform: uppercase; 
+                        letter-spacing: 1px; 
+                        border-bottom: 3px double #1e293b; 
+                        padding-bottom: 10px; 
+                        margin-top: 0; 
+                        margin-bottom: 25px; 
+                    }
+                    
+                    /* El truco mágico de inline-block previene que Chrome desborde los elementos hacia arriba */
+                    h2, h3 {
+                        display: inline-block !important;
+                        width: 100% !important;
+                        break-after: avoid !important; 
+                        page-break-after: avoid !important;
+                        -webkit-column-break-after: avoid !important;
+                        box-sizing: border-box;
+                    }
+
+                    h2 { 
+                        font-size: 15pt; 
+                        font-weight: 700; 
+                        border-bottom: 2px solid #cbd5e1; 
+                        margin-top: 20px; 
+                        margin-bottom: 10px; 
+                        padding-bottom: 4px; 
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    
+                    h3 { font-size: 13pt; font-weight: bold; margin-top: 10px; margin-bottom: 6px; color: #1e293b; }
+                    
+                    p, div, ul { margin-bottom: 10px; }
+                    ul { padding-left: 20px; margin-top: 5px;}
                     b, strong { font-weight: 700; color: #000; }
 
-                    .columns-wrapper { column-count: 2; column-gap: 8mm; }
-                    .avoid-break { break-inside: avoid; page-break-inside: avoid; margin-bottom: 15px; }
-
-                    .main-image { max-width: 100%; max-height: 250px; object-fit: cover; border: 1pt solid #334155; padding: 3px; display: block; margin: 0 auto 15px auto; column-span: all; }
-
-                    .map-image-wrapper { column-span: all; margin-bottom: 20px; border: 1pt solid #cbd5e1; padding: 4px; background: #fdfbf7; }
-                    .map-image { width: 100%; max-height: 400px; object-fit: contain; display: block; margin: 0 auto; }
-                    .map-title { margin-top: 0; border: none; text-align: center; }
-
-                    .columns-wrapper img { max-width: 100%; height: auto; border-radius: 3px; display: block; margin: 6px auto; border: 1pt solid #cbd5e1; padding: 2px;}
-                    .npc-image { width: 100%; max-height: 120px; object-fit: contain; border: 1pt solid #cbd5e1; padding: 2px; margin-bottom: 6px; border-radius: 3px;}
-
-                    table { width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 4px; border-bottom: 2pt solid #1f2937; border-top: 2pt solid #1f2937; font-size: 9pt; }
-                    th { background-color: #f1f5f9; padding: 4px; text-align: left; border-bottom: 1pt solid #94a3b8; font-size: 11pt;}
-                    th:first-child { width: 30px; text-align: center; }
-                    td { padding: 4px; vertical-align: top; }
-                    td:first-child { font-weight: bold; text-align: center; }
-                    tr:nth-child(even) { background-color: #f8fafc; }
+                    .columns-wrapper { 
+                        column-count: 2; 
+                        column-gap: 10mm; 
+                        display: block;
+                        width: 100%;
+                    }
                     
-                    .table-desc { font-size: 9pt; color: #475569; font-style: italic; margin-bottom: 4px; }
-                    .table-footer { font-size: 8pt; color: #64748b; margin-top: 4px; }
+                    /* Contenedor estricto anti-cortes y anti-desbordamientos */
+                    .avoid-break { 
+                        break-inside: avoid !important; 
+                        page-break-inside: avoid !important; 
+                        -webkit-column-break-inside: avoid !important;
+                        display: inline-block !important; 
+                        width: 100% !important;
+                        margin-bottom: 18px; 
+                        vertical-align: top;
+                        box-sizing: border-box;
+                    }
 
-                    .stat-block { border: 1pt solid #cbd5e1; padding: 8px; border-radius: 3px; background: #fff; box-shadow: 2px 2px 0px #e2e8f0;}
-                    .stat-line { background: #f1f5f9; padding: 3px; border-radius: 2px; font-size: 8.5pt; font-weight: bold; color: #334155; margin-bottom: 6px;}
-                    .npc-field { font-size: 9pt; margin-bottom: 3px; }
-                    .magic-text { color: #047857; }
-                    .secret-text { color: #475569; font-style: italic; }
-                    .danger-text { color: #b91c1c; }
-                    .clue-text { color: #0369a1; }
+                    .main-image { max-width: 100%; max-height: 300px; object-fit: cover; border: 2px solid #1e293b; padding: 4px; background: white; display: block; margin: 0 auto 20px auto; column-span: all; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
+                    
+                    .map-image-wrapper { column-span: all; margin-bottom: 25px; border: 2px solid #1e293b; padding: 10px; background: white; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
+                    .map-image { width: 100%; max-height: 450px; object-fit: contain; display: block; margin: 0 auto; }
+                    .map-title { margin-top: 0; border: none; text-align: center; font-size: 18pt; display: block; }
+                    
+                    /* FIX IMÁGENES DENTRO DE TEXTO: Centrado forzado absoluto */
+                    .columns-wrapper img { 
+                        max-width: 90% !important; 
+                        height: auto !important; 
+                        border-radius: 3px !important; 
+                        display: block !important; 
+                        margin: 15px auto !important; /* Forzar auto en L y R */
+                        border: 1px solid #94a3b8 !important; 
+                        padding: 3px !important; 
+                        background: white !important;
+                        box-shadow: 2px 2px 0px rgba(0,0,0,0.1) !important;
+                        break-inside: avoid !important;
+                    }
+                    
+                    .npc-image { width: 100% !important; max-width: 100% !important; max-height: 140px; object-fit: contain; border: 1px solid #cbd5e1; padding: 4px; margin: 0 auto 10px auto !important; background: #f8fafc; display: block !important; }
 
-                    /* Listas de Facción */
-                    .faction-list { margin-bottom: 10px; padding-left: 0; list-style: none;}
-                    .faction-list li { margin-bottom: 4px; font-size: 9.5pt;}
-                    .faction-list .check { font-family: monospace; font-size: 13pt; margin-right: 4px; color: #64748b; vertical-align: middle;}
-                    .faction-list .bullet { font-size: 12pt; margin-right: 4px; color: #1e293b; vertical-align: middle;}
+                    table { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 5px; border: 2px solid #1e293b; font-size: 9.5pt; background: white;}
+                    th { background-color: #1e293b; color: white; padding: 6px; text-align: left; font-size: 11pt; border-right: 1px solid #334155; ${titleFont}}
+                    th:first-child { width: 35px; text-align: center; }
+                    th:last-child { border-right: none; }
+                    td { padding: 6px; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
+                    td:first-child { font-weight: bold; text-align: center; background-color: #f1f5f9; color: #0f172a; }
+                    td:last-child { border-right: none; }
+                    tr:last-child td { border-bottom: none; }
+                    tr:nth-child(even) td:last-child { background-color: #f8fafc; }
+                    
+                    .table-desc { font-size: 9.5pt; color: #475569; font-style: italic; margin-bottom: 8px; border-left: 3px solid #cbd5e1; padding-left: 8px;}
+                    .table-footer { font-size: 8.5pt; color: #64748b; margin-top: 6px; text-align: right; font-style: italic;}
+
+                    .stat-block { border: 2px solid #1e293b; padding: 12px; background: #ffffff; box-shadow: 4px 4px 0px #cbd5e1; position: relative; box-sizing: border-box;}
+                    .stat-block h3 { margin-top: 0; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; font-size: 15pt;}
+                    
+                    .stat-line { background: #f1f5f9; padding: 5px 8px; border-left: 3px solid #10b981; font-size: 9pt; font-weight: bold; color: #0f172a; margin-bottom: 8px; display: flex; justify-content: space-between;}
+                    
+                    .npc-field { font-size: 9.5pt; margin-bottom: 5px; }
+                    .npc-field b { color: #0f172a; }
+                    
+                    .magic-text { color: #047857; background: #ecfdf5; padding: 2px 4px; border-radius: 2px; display: inline-block; width: 100%; box-sizing: border-box; margin-top: 2px;}
+                    .secret-text { color: #475569; font-style: italic; background: #f8fafc; padding: 4px; border-left: 2px dashed #94a3b8; display: block; margin-top: 5px;}
+                    .danger-text { color: #b91c1c; background: #fef2f2; padding: 2px 4px; border-radius: 2px;}
+                    .clue-text { color: #0369a1; background: #f0f9ff; padding: 2px 4px; border-radius: 2px;}
+
+                    .faction-list { margin-bottom: 12px; padding-left: 0; list-style: none;}
+                    .faction-list li { margin-bottom: 6px; font-size: 10pt; background: #f8fafc; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 2px;}
+                    .faction-list .check { font-family: Courier, monospace; font-size: 14pt; margin-right: 6px; color: #94a3b8; vertical-align: middle;}
+                    .faction-list .bullet { font-size: 14pt; margin-right: 6px; color: #1e293b; vertical-align: middle;}
+
+                    /* Pie de página fijo en caso de que @page no funcione */
+                    .print-footer { 
+                        position: fixed; 
+                        bottom: 0mm; 
+                        right: 0; 
+                        font-size: 8pt; 
+                        color: #64748b; 
+                        font-family: 'Inter', sans-serif; 
+                        text-align: right; 
+                        width: 100%; 
+                        border-top: 1px solid #e2e8f0; 
+                        padding-top: 4px;
+                    }
                 </style>
             </head>
             <body>
-                <h1>${hex.title || `Hexágono ${hex.label}`}</h1>
-                
-                ${hex.imageUrl ? `<img src="${hex.imageUrl}" class="main-image">` : ''}
-                ${hasText(hex.description) ? `<h2>${hex.hexType === 'adventure' ? 'Sinopsis' : 'Trasfondo de la Facción'}</h2><div style="margin-bottom: 20px; column-span: all;">${hex.description}</div>` : ''}
-                
-                ${hex.mapImageUrl && hex.hexType === 'adventure' ? `<div class="map-image-wrapper">
-                    <h2 class="map-title title-font">Mapa de Exploración</h2>
-                    <img src="${hex.mapImageUrl}" class="map-image">
-                </div>` : ''}
+                <div class="page-container">
+                    <h1>${hex.title || `Hexágono ${hex.label}`}</h1>
+                    
+                    ${hex.imageUrl ? `<img src="${hex.imageUrl}" class="main-image">` : ''}
+                    
+                    ${hasText(hex.description) ? `<div class="avoid-break" style="column-span: all; display: block !important;"><h2>${hex.hexType === 'adventure' ? 'Sinopsis' : 'Trasfondo de la Facción'}</h2><div style="margin-bottom: 20px;">${hex.description}</div></div>` : ''}
+                    
+                    ${hex.mapImageUrl && hex.hexType === 'adventure' ? `<div class="map-image-wrapper avoid-break">
+                        <h2 class="map-title title-font">Mapa de Exploración</h2>
+                        <img src="${hex.mapImageUrl}" class="map-image">
+                    </div>` : ''}
 
-                <div class="columns-wrapper">
+                    <div class="columns-wrapper">
             `;
 
             // Lógica según si es AVENTURA o FACCIÓN
@@ -1462,7 +1579,7 @@
                         if(en.behavior) htmlContent += `<div class="npc-field"><b>Comportamiento:</b> ${en.behavior.replace(/\n/g, '<br>')}</div>`;
                         if(en.motivation) htmlContent += `<div class="npc-field"><b>Motivación:</b> ${en.motivation}</div>`;
                         const armor = en.armor > 0 ? `, Armadura ${en.armor}` : '';
-                        htmlContent += `<div class="stat-line">${en.hp || '-'} PG, FUE ${en.str || '-'}, DES ${en.dex || '-'}, VOL ${en.wil || '-'}${armor}</div>`;
+                        htmlContent += `<div class="stat-line"><span>${en.hp || '-'} PG</span><span>FUE ${en.str || '-'} | DES ${en.dex || '-'} | VOL ${en.wil || '-'}</span><span>${armor}</span></div>`;
                         if(en.attack) htmlContent += `<div class="npc-field"><b>Ataque:</b> ${en.attack}</div>`;
                         if(en.special) htmlContent += `<div class="npc-field magic-text"><b>Especial:</b> ${en.special.replace(/\n/g, '<br>')}</div>`;
                         if(en.weakness) htmlContent += `<div class="npc-field"><b>Debilidad:</b> ${en.weakness}</div>`;
@@ -1475,12 +1592,12 @@
                     htmlContent += `<h2>Lugares de Interés</h2>`;
                     hex.locations.forEach((loc, i) => {
                         if(!loc.name.trim() && !loc.description.trim()) return;
-                        htmlContent += `<div class="avoid-break" style="margin-bottom: 12px;">`;
+                        htmlContent += `<div class="avoid-break" style="margin-bottom: 15px;">`;
                         htmlContent += `<h3>${i+1}. ${loc.name}</h3>`;
-                        if(loc.description) htmlContent += `<div class="npc-field"><b>Descripción:</b> ${loc.description.replace(/\n/g, '<br>')}</div>`;
+                        if(loc.description) htmlContent += `<div class="npc-field" style="border-left: 2px solid #cbd5e1; padding-left: 8px; margin-top: 6px;">${loc.description.replace(/\n/g, '<br>')}</div>`;
                         if(loc.interesting) htmlContent += `<div class="npc-field"><b>Algo interesante:</b> ${loc.interesting}</div>`;
-                        if(loc.danger) htmlContent += `<div class="npc-field danger-text"><b>Un peligro:</b> ${loc.danger}</div>`;
-                        if(loc.clue) htmlContent += `<div class="npc-field clue-text"><b>Una pista:</b> ${loc.clue}</div>`;
+                        if(loc.danger) htmlContent += `<div class="npc-field"><span class="danger-text"><b>Un peligro:</b></span> ${loc.danger}</div>`;
+                        if(loc.clue) htmlContent += `<div class="npc-field"><span class="clue-text"><b>Una pista:</b></span> ${loc.clue}</div>`;
                         htmlContent += `</div>`;
                     });
                 }
@@ -1502,7 +1619,7 @@
                         htmlContent += `</ul></div>`;
                     }
                     if (hasText(fac.notes)) {
-                        htmlContent += `<div class="avoid-break"><h2>Notas y Relaciones</h2><div>${fac.notes}</div></div>`;
+                        htmlContent += `<div class="avoid-break"><h2>Notas y Relaciones</h2><div class="secret-text" style="border-color: #10b981;">${fac.notes}</div></div>`;
                     }
                 }
             }
@@ -1524,10 +1641,12 @@
             }
 
             htmlContent += `
-                </div> <!-- Cierra columns-wrapper -->
-                <div style="margin-top: 30px; text-align: center; font-size: 8pt; color: #94a3b8; border-top: 1pt solid #cbd5e1; padding-top: 10px; column-span: all;">
-                    Generado con Maquetador Mausritter - Hexágono ${hex.label}
-                </div>
+                    </div> <!-- Cierra columns-wrapper -->
+                    
+                    <div class="print-footer">
+                        Mausritter / ${hex.title || `Hexágono ${hex.label}`}
+                    </div>
+                </div> <!-- Cierra page-container -->
             </body>
             </html>
             `;

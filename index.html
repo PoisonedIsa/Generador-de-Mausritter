@@ -1375,7 +1375,7 @@
 
                     @page { 
                         size: A4; 
-                        margin: 15mm 15mm 20mm 15mm; 
+                        margin: 25mm 15mm 25mm 15mm; /* Aumentado el margen superior a 25mm */
                         @bottom-right {
                             content: "Página " counter(page);
                             font-family: 'Inter', sans-serif;
@@ -1388,7 +1388,7 @@
                     
                     .page-container {
                         border: 3px solid #1e293b;
-                        padding: 25px;
+                        padding: 30px 25px; /* Más padding interno para respirar */
                         min-height: calc(100vh - 40px);
                         position: relative;
                         background: #fffcf8;
@@ -1399,7 +1399,7 @@
                     h1, h2, h3, .title-font, th { ${titleFont} color: #0f172a; }
                     
                     h1 { 
-                        font-size: 26pt; 
+                        font-size: 28pt; 
                         font-weight: 900; 
                         text-align: center; 
                         text-transform: uppercase; 
@@ -1410,7 +1410,6 @@
                         margin-bottom: 25px; 
                     }
                     
-                    /* El truco mágico de inline-block previene que Chrome desborde los elementos hacia arriba */
                     h2, h3 {
                         display: inline-block !important;
                         width: 100% !important;
@@ -1444,7 +1443,6 @@
                         width: 100%;
                     }
                     
-                    /* Contenedor estricto anti-cortes y anti-desbordamientos */
                     .avoid-break { 
                         break-inside: avoid !important; 
                         page-break-inside: avoid !important; 
@@ -1462,20 +1460,30 @@
                     .map-image { width: 100%; max-height: 450px; object-fit: contain; display: block; margin: 0 auto; }
                     .map-title { margin-top: 0; border: none; text-align: center; font-size: 18pt; display: block; }
                     
-                    /* FIX IMÁGENES DENTRO DE TEXTO: Centrado forzado absoluto */
-                    .columns-wrapper img { 
-                        max-width: 90% !important; 
+                    /* FIX IMÁGENES DENTRO DE TEXTO: Centrado forzado absoluto global */
+                    .rich-text-print img { 
+                        max-width: 85% !important; 
                         height: auto !important; 
-                        border-radius: 3px !important; 
+                        border-radius: 4px !important; 
                         display: block !important; 
-                        margin: 15px auto !important; /* Forzar auto en L y R */
-                        border: 1px solid #94a3b8 !important; 
-                        padding: 3px !important; 
+                        margin: 25px auto !important; /* Centrado estricto L/R y margen generoso T/B */
+                        border: 1px solid #cbd5e1 !important; 
+                        padding: 4px !important; 
                         background: white !important;
-                        box-shadow: 2px 2px 0px rgba(0,0,0,0.1) !important;
+                        box-shadow: 3px 3px 0px rgba(0,0,0,0.1) !important;
+                        page-break-inside: avoid !important;
                         break-inside: avoid !important;
                     }
                     
+                    /* FIX PÁRRAFOS Y LISTAS: Evitar que topen arriba en nuevas páginas */
+                    .rich-text-print p, .rich-text-print ul, .rich-text-print h4 {
+                        display: inline-block !important; /* Evita roturas internas */
+                        width: 100% !important;
+                        margin-top: 8px !important;
+                        margin-bottom: 8px !important;
+                        padding-top: 4px !important; /* Distancia segura si cae a principio de página */
+                    }
+
                     .npc-image { width: 100% !important; max-width: 100% !important; max-height: 140px; object-fit: contain; border: 1px solid #cbd5e1; padding: 4px; margin: 0 auto 10px auto !important; background: #f8fafc; display: block !important; }
 
                     table { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 5px; border: 2px solid #1e293b; font-size: 9.5pt; background: white;}
@@ -1509,18 +1517,22 @@
                     .faction-list .check { font-family: Courier, monospace; font-size: 14pt; margin-right: 6px; color: #94a3b8; vertical-align: middle;}
                     .faction-list .bullet { font-size: 14pt; margin-right: 6px; color: #1e293b; vertical-align: middle;}
 
-                    /* Pie de página fijo en caso de que @page no funcione */
+                    /* Pie de página dinámico */
                     .print-footer { 
                         position: fixed; 
-                        bottom: 0mm; 
+                        bottom: -12mm; /* Posicionado fuera del marco principal */
                         right: 0; 
-                        font-size: 8pt; 
+                        font-size: 9pt; 
                         color: #64748b; 
                         font-family: 'Inter', sans-serif; 
-                        text-align: right; 
                         width: 100%; 
                         border-top: 1px solid #e2e8f0; 
-                        padding-top: 4px;
+                        padding-top: 6px;
+                        display: flex;
+                        justify-content: space-between;
+                    }
+                    .print-footer .page-num::after {
+                        content: counter(page);
                     }
                 </style>
             </head>
@@ -1530,7 +1542,7 @@
                     
                     ${hex.imageUrl ? `<img src="${hex.imageUrl}" class="main-image">` : ''}
                     
-                    ${hasText(hex.description) ? `<div class="avoid-break" style="column-span: all; display: block !important;"><h2>${hex.hexType === 'adventure' ? 'Sinopsis' : 'Trasfondo de la Facción'}</h2><div style="margin-bottom: 20px;">${hex.description}</div></div>` : ''}
+                    ${hasText(hex.description) ? `<div style="column-span: all; display: block !important; margin-bottom: 25px;"><h2 style="margin-top: 0;">${hex.hexType === 'adventure' ? 'Sinopsis' : 'Trasfondo de la Facción'}</h2><div class="rich-text-print">${hex.description}</div></div>` : ''}
                     
                     ${hex.mapImageUrl && hex.hexType === 'adventure' ? `<div class="map-image-wrapper avoid-break">
                         <h2 class="map-title title-font">Mapa de Exploración</h2>
@@ -1543,7 +1555,6 @@
             // Lógica según si es AVENTURA o FACCIÓN
             if (hex.hexType === 'adventure') {
                 
-                // 1. Tablas
                 hex.customTables.forEach(table => {
                     if(table.rows.every(row => !row.trim())) return;
                     let diceType = 'd' + table.rows.length;
@@ -1563,10 +1574,9 @@
                     });
                     htmlContent += `</tbody></table>`;
                     if (hasText(table.footer)) htmlContent += `<div class="table-footer">${table.footer}</div>`;
-                    htmlContent += `</div>`; 
+                    htmlContent += `</div>`;
                 });
 
-                // 2. Enemigos
                 if(hex.enemies && hex.enemies.some(en => en.name.trim() || en.type.trim() || en.attack.trim())) {
                     htmlContent += `<h2>Enemigos y Monstruos</h2>`;
                     hex.enemies.forEach(en => {
@@ -1587,7 +1597,6 @@
                     });
                 }
 
-                // 3. Lugares
                 if(hex.locations && hex.locations.some(loc => loc.name.trim() || loc.description.trim())) {
                     htmlContent += `<h2>Lugares de Interés</h2>`;
                     hex.locations.forEach((loc, i) => {
@@ -1602,7 +1611,6 @@
                     });
                 }
             } else {
-                // EXPORTACIÓN MODO FACCIÓN
                 if(hex.faction) {
                     const fac = hex.faction;
                     const validObj = fac.objectives.filter(o => o.trim());
@@ -1624,7 +1632,6 @@
                 }
             }
 
-            // PNJs (Aplica para ambos tipos)
             if(hex.npcs && hex.npcs.some(npc => npc.name.trim() || npc.appearance.trim() || npc.personality.trim())) {
                 htmlContent += `<h2>${hex.hexType === 'adventure' ? 'Personajes No Jugadores' : 'Miembros Clave'}</h2>`;
                 hex.npcs.forEach(npc => {
@@ -1644,7 +1651,8 @@
                     </div> <!-- Cierra columns-wrapper -->
                     
                     <div class="print-footer">
-                        Mausritter / ${hex.title || `Hexágono ${hex.label}`}
+                        <span>Mausritter / Aventura Hexágono ${hex.label}</span>
+                        <span class="page-num">Página </span>
                     </div>
                 </div> <!-- Cierra page-container -->
             </body>

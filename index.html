@@ -8,6 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <!-- Cropper.js (Para recorte de imágenes) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <!-- HTML2PDF para exportar a PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-serif { font-family: 'Merriweather', serif; }
@@ -30,6 +36,9 @@
         
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Ajuste para el cropper modal */
+        #cropImageTarget { display: block; max-width: 100%; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
@@ -176,7 +185,7 @@
                 <div id="content-info" class="tab-content space-y-4">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1" id="labelHexTitle">Título de la Aventura</label>
-                        <input type="text" id="hexTitleInput" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none font-serif text-lg" placeholder="...">
+                        <input type="text" id="hexTitleInput" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none font-serif text-lg" placeholder="Ej. El Bosque Oscuro...">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">Terreno Base</label>
@@ -206,7 +215,7 @@
                                 <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold">Título</button>
                                 <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs">Texto</button>
                                 <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                                <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold">🖼️ Img</button>
+                                <button type="button" onmousedown="event.preventDefault(); triggerRichTextImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen con Recorte">🖼️ Img</button>
                             </div>
                             <div contenteditable="true" id="hexDescInput" class="p-2 outline-none text-sm rich-text-content" style="min-height: 120px;" data-placeholder="..."></div>
                         </div>
@@ -306,6 +315,37 @@
         </div>
     </div>
 
+    <!-- MODAL DE RECORTADOR DE IMAGEN (NUEVO) -->
+    <div id="cropModal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center z-[110] backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl flex flex-col max-h-[90vh] mx-4">
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-lg">
+                <h3 class="font-bold text-slate-800 font-serif">Recortar Imagen</h3>
+                <button onclick="closeCropModal()" class="text-slate-400 hover:text-red-500 font-bold px-2">X</button>
+            </div>
+            <div class="p-4 flex-1 overflow-hidden bg-slate-200 flex flex-col items-center justify-center relative min-h-[400px]">
+                <div class="w-full h-full flex items-center justify-center">
+                    <img id="cropImageTarget" src="" class="max-w-full max-h-[60vh] hidden">
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-lg flex justify-between items-center flex-wrap gap-3">
+                <div class="flex gap-2">
+                    <span class="text-xs font-bold text-slate-500 self-center mr-2">Proporción:</span>
+                    <button onclick="setCropAspectRatio(NaN)" class="px-3 py-1.5 bg-white border border-slate-300 rounded text-xs hover:bg-slate-100 font-medium">Libre</button>
+                    <button onclick="setCropAspectRatio(1)" class="px-3 py-1.5 bg-white border border-slate-300 rounded text-xs hover:bg-slate-100 font-medium">1:1 (Cuadrado)</button>
+                    <button onclick="setCropAspectRatio(4/3)" class="px-3 py-1.5 bg-white border border-slate-300 rounded text-xs hover:bg-slate-100 font-medium">4:3</button>
+                    <button onclick="setCropAspectRatio(16/9)" class="px-3 py-1.5 bg-white border border-slate-300 rounded text-xs hover:bg-slate-100 font-medium">16:9</button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeCropModal()" class="px-4 py-2 text-sm text-slate-600 font-medium hover:bg-slate-200 rounded transition-colors">Cancelar</button>
+                    <button onclick="applyCrop()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded transition-colors flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg>
+                        Insertar Recorte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE MENSAJE ESPECIAL -->
     <div id="copyModal" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-[100] backdrop-blur-sm">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh] mx-4">
@@ -328,8 +368,66 @@
     </div>
 
     <script>
+        // --- LOGICA DE RECORTADOR DE IMAGEN (CROPPER.JS) ---
+        let cropperInstance = null;
+        let cropCallback = null;
+
+        function openUniversalCropModal(file, callback) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const modal = document.getElementById('cropModal');
+                const imgTarget = document.getElementById('cropImageTarget');
+                imgTarget.src = ev.target.result;
+                imgTarget.classList.remove('hidden');
+                modal.classList.replace('hidden', 'flex');
+                
+                cropCallback = callback;
+
+                if (cropperInstance) cropperInstance.destroy();
+                
+                // Inicializar cropper
+                cropperInstance = new Cropper(imgTarget, {
+                    aspectRatio: NaN, // Libre por defecto
+                    viewMode: 2, // No salir del canvas
+                    autoCropArea: 0.9,
+                    responsive: true,
+                    background: false
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function closeCropModal() {
+            const modal = document.getElementById('cropModal');
+            modal.classList.replace('flex', 'hidden');
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            cropCallback = null;
+        }
+
+        function setCropAspectRatio(ratio) {
+            if (cropperInstance) cropperInstance.setAspectRatio(ratio);
+        }
+
+        function applyCrop() {
+            if (!cropperInstance || !cropCallback) return;
+            // Extraer el trozo recortado
+            const canvas = cropperInstance.getCroppedCanvas({
+                maxWidth: 1500, // Limitar tamaño maximo
+                maxHeight: 1500
+            });
+            // Comprimir a JPEG 85% para ahorrar memoria
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            
+            cropCallback(croppedDataUrl);
+            closeCropModal();
+        }
+
+
         // --- UTILIDAD DE EDITOR ENRIQUECIDO ---
-        function triggerImageUpload(btn) {
+        function triggerRichTextImageUpload(btn) {
             const editor = btn.closest('.flex-col').querySelector('.rich-text-content');
             const input = document.createElement('input');
             input.type = 'file';
@@ -337,13 +435,13 @@
             input.onchange = e => {
                 const file = e.target.files[0];
                 if (!file) return;
-                const reader = new FileReader();
-                reader.onload = ev => {
+                
+                // Pasamos la imagen por el Cropper antes de insertarla
+                openUniversalCropModal(file, (croppedDataUrl) => {
                     editor.focus();
-                    document.execCommand('insertImage', false, ev.target.result);
-                    editor.dispatchEvent(new Event('input')); 
-                };
-                reader.readAsDataURL(file);
+                    document.execCommand('insertImage', false, croppedDataUrl);
+                    editor.dispatchEvent(new Event('input')); // Disparar autoguardado
+                });
             };
             input.click();
         }
@@ -360,7 +458,7 @@
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'H4')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs font-bold" title="Título">Título</button>
                     <button type="button" onmousedown="event.preventDefault(); document.execCommand('formatBlock',false,'DIV')" class="px-2 py-0.5 hover:bg-slate-200 rounded text-xs" title="Texto Normal">Texto</button>
                     <div class="w-px h-3 bg-slate-300 mx-1"></div>
-                    <button type="button" onmousedown="event.preventDefault(); triggerImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen">🖼️ Img</button>
+                    <button type="button" onmousedown="event.preventDefault(); triggerRichTextImageUpload(this)" class="px-2 py-0.5 hover:bg-emerald-200 text-emerald-700 rounded text-xs font-bold" title="Insertar Imagen con Recorte">🖼️ Img</button>
                 </div>
                 <div contenteditable="true" 
                      class="p-2 outline-none text-sm rich-text-content" 
@@ -505,7 +603,6 @@
             mapRows = data.mapRows || 5;
             hexes = data.hexes || {};
             
-            // Compatibilidad y estructuras base
             Object.values(hexes).forEach(hex => {
                 if (!hex.hexType) hex.hexType = 'adventure';
                 if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
@@ -542,13 +639,12 @@
             document.getElementById('hexTerrainSelect').innerHTML = optionsHTML;
         }
 
-        // --- SISTEMA DE TIPO DE HEXÁGONO (Aventura vs Facción) ---
         function setHexType(type) {
             if (!selectedHexId) return;
             hexes[selectedHexId].hexType = type;
             debounceAutoSave();
             updateInspectorUI();
-            switchTab('info'); // Reset a la pestaña info al cambiar
+            switchTab('info');
         }
 
         function switchTab(tabName) {
@@ -584,21 +680,30 @@
             
             document.getElementById('hexTerrainSelect').addEventListener('change', e => { updateData('terrain', e.target.value); renderMap(); debounceAutoSave();});
 
+            // Aplicamos el Recorte Universal a la Imagen Principal
             document.getElementById('hexImageInput').addEventListener('change', e => {
                 if (!selectedHexId || !e.target.files.length) return;
-                const reader = new FileReader();
-                reader.onload = ev => { updateData('imageUrl', ev.target.result); updateInspectorUI(); renderMap(); debounceAutoSave();};
-                reader.readAsDataURL(e.target.files[0]);
+                openUniversalCropModal(e.target.files[0], (croppedDataUrl) => {
+                    updateData('imageUrl', croppedDataUrl); 
+                    updateInspectorUI(); 
+                    renderMap(); 
+                    debounceAutoSave();
+                });
+                e.target.value = '';
             });
             document.getElementById('removeImageBtn').addEventListener('click', () => {
                 updateData('imageUrl', null); document.getElementById('hexImageInput').value = ''; updateInspectorUI(); renderMap(); debounceAutoSave();
             });
 
+            // Aplicamos el Recorte Universal al Mapa de Exploración
             document.getElementById('hexMapImageInput').addEventListener('change', e => {
                 if (!selectedHexId || !e.target.files.length) return;
-                const reader = new FileReader();
-                reader.onload = ev => { updateData('mapImageUrl', ev.target.result); updateInspectorUI(); debounceAutoSave();};
-                reader.readAsDataURL(e.target.files[0]);
+                openUniversalCropModal(e.target.files[0], (croppedDataUrl) => {
+                    updateData('mapImageUrl', croppedDataUrl); 
+                    updateInspectorUI(); 
+                    debounceAutoSave();
+                });
+                e.target.value = '';
             });
             document.getElementById('removeMapImageBtn').addEventListener('click', () => {
                 updateData('mapImageUrl', null); document.getElementById('hexMapImageInput').value = ''; updateInspectorUI(); debounceAutoSave();
@@ -747,8 +852,12 @@
         
         function uploadEnemyImage(event, index) {
             if (!selectedHexId || !event.target.files.length) return;
-            const r = new FileReader(); r.onload = (e) => { hexes[selectedHexId].enemies[index].imageUrl = e.target.result; renderEnemiesUI(); debounceAutoSave(); };
-            r.readAsDataURL(event.target.files[0]);
+            openUniversalCropModal(event.target.files[0], (croppedDataUrl) => {
+                hexes[selectedHexId].enemies[index].imageUrl = croppedDataUrl; 
+                renderEnemiesUI(); 
+                debounceAutoSave();
+            });
+            event.target.value = '';
         }
         function removeEnemyImage(index) { if (!selectedHexId) return; hexes[selectedHexId].enemies[index].imageUrl = null; renderEnemiesUI(); debounceAutoSave(); }
 
@@ -805,8 +914,12 @@
 
         function uploadNPCImage(event, index) {
             if (!selectedHexId || !event.target.files.length) return;
-            const r = new FileReader(); r.onload = (e) => { hexes[selectedHexId].npcs[index].imageUrl = e.target.result; renderNPCsUI(); debounceAutoSave(); };
-            r.readAsDataURL(event.target.files[0]);
+            openUniversalCropModal(event.target.files[0], (croppedDataUrl) => {
+                hexes[selectedHexId].npcs[index].imageUrl = croppedDataUrl; 
+                renderNPCsUI(); 
+                debounceAutoSave();
+            });
+            event.target.value = '';
         }
         function removeNPCImage(index) { if (!selectedHexId) return; hexes[selectedHexId].npcs[index].imageUrl = null; renderNPCsUI(); debounceAutoSave(); }
 
@@ -901,7 +1014,6 @@
 
             const faction = hexes[selectedHexId].faction;
 
-            // Objetivos
             listObj.innerHTML = faction.objectives.map((obj, i) => `
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-slate-400 font-mono text-lg">☐</span>
@@ -910,7 +1022,6 @@
                 </div>
             `).join('');
 
-            // Recursos
             listRes.innerHTML = faction.resources.map((res, i) => `
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-slate-400 text-lg">•</span>
@@ -919,7 +1030,6 @@
                 </div>
             `).join('');
 
-            // Notas (Editor Enriquecido)
             noteContainer.innerHTML = createRichTextEditor(
                 faction.notes,
                 `if(selectedHexId){hexes[selectedHexId].faction.notes = this.innerHTML;}`,
@@ -965,7 +1075,7 @@
             const center = { x: W * (q + r / 2), y: H * 0.75 * r };
             return {
                 id, q, r, label, x: center.x, y: center.y,
-                hexType: 'adventure', // Puede ser 'adventure' o 'faction'
+                hexType: 'adventure', // 'adventure' o 'faction'
                 terrain: 'blank', imageUrl: null, mapImageUrl: null,
                 title: `Hexágono ${label}`, description: '',
                 customTables: [
@@ -990,15 +1100,12 @@
             noSel.classList.add('hidden'); insp.classList.remove('hidden');
             const hex = hexes[selectedHexId];
             
-            // Lógica de compatibilidad si es un mapa viejo
             if (!hex.hexType) hex.hexType = 'adventure';
             if (!hex.faction) hex.faction = { objectives: [''], resources: [''], notes: '' };
             
-            // Configurar botones de Tipo
             document.getElementById('type-adv-btn').className = hex.hexType === 'adventure' ? 'flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200' : 'flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent';
             document.getElementById('type-fac-btn').className = hex.hexType === 'faction' ? 'flex-1 text-xs py-1.5 rounded font-bold transition-all shadow-sm bg-white text-emerald-700 border border-slate-200' : 'flex-1 text-xs py-1.5 rounded font-bold transition-all text-slate-500 hover:bg-slate-200 border border-transparent';
 
-            // Mostrar / Ocultar Pestañas según Tipo
             const tabs = {
                 'tab-tables': hex.hexType === 'adventure',
                 'tab-locations': hex.hexType === 'adventure',
@@ -1009,19 +1116,16 @@
                 else document.getElementById(id).classList.add('hidden');
             }
 
-            // Cambiar etiquetas basadas en el tipo
             document.getElementById('inspectorHeaderTitle').innerText = hex.hexType === 'adventure' ? 'Aventura' : 'Sede de Facción';
             document.getElementById('labelHexTitle').innerText = hex.hexType === 'adventure' ? 'Título de la Aventura' : 'Nombre de la Facción';
             document.getElementById('labelHexDesc').innerText = hex.hexType === 'adventure' ? 'Sinopsis / Descripción General' : 'Trasfondo y Descripción';
             
-            // Ocultar subida de mapa si es faccion (opcional, pero lo dejamos por si acaso lo quieren usar)
             document.getElementById('mapUploadContainer').style.display = hex.hexType === 'adventure' ? 'block' : 'none';
             document.getElementById('enemiesSection').style.display = hex.hexType === 'adventure' ? 'block' : 'none';
             document.getElementById('npcsSection').querySelector('h3').innerHTML = hex.hexType === 'adventure' ? 'Personajes No Jugadores (PNJ) <button onclick="addNPC()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir PNJ</button>' : 'Miembros Clave de la Facción <button onclick="addNPC()" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded hover:bg-emerald-200">+ Añadir Miembro</button>';
 
-
             document.getElementById('hexIdLabel').innerText = hex.label;
-            document.getElementById('hexTitleInput').value = hex.title === `Hexágono ${hex.label}` ? '' : hex.title; // Limpiar para que sea más facil titular
+            document.getElementById('hexTitleInput').value = hex.title === `Hexágono ${hex.label}` ? '' : hex.title; 
             document.getElementById('hexTerrainSelect').value = hex.terrain;
             document.getElementById('hexDescInput').innerHTML = hex.description || '';
 
@@ -1364,7 +1468,7 @@
                 }
             }
 
-            // PNJs (Aplica para ambos tipos: Aventura o Miembros de Facción)
+            // PNJs (Aplica para ambos tipos)
             if(hex.npcs && hex.npcs.some(npc => npc.name.trim() || npc.appearance.trim() || npc.personality.trim())) {
                 htmlContent += `<h2>${hex.hexType === 'adventure' ? 'Personajes No Jugadores' : 'Miembros Clave'}</h2>`;
                 hex.npcs.forEach(npc => {

@@ -328,9 +328,6 @@
             
             <!-- Botón Exportar PDF -->
             <div class="p-4 border-t border-slate-200 bg-white flex flex-col gap-2 shrink-0">
-                <p class="text-[10px] text-red-600 font-bold text-center leading-tight mb-1">
-                    Nota: Para ver el número de página en tu impresión final, activa "Encabezados y pies de página" en las opciones del navegador al exportar.
-                </p>
                 <div class="flex items-center justify-between text-sm">
                     <span class="text-slate-600 font-medium">Fuente del PDF:</span>
                     <select id="pdfFontSelect" class="p-1 border border-slate-300 rounded outline-none focus:border-emerald-500 bg-slate-50">
@@ -1352,7 +1349,7 @@
             img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
         }
 
-        // --- IMPRESIÓN NATIVA / EXPORTAR A PDF ---
+        // --- IMPRESIÓN NATIVA / EXPORTAR A PDF MEJORADO ---
         function exportAdventurePrint() {
             if(!selectedHexId) return;
             const hex = hexes[selectedHexId];
@@ -1371,123 +1368,141 @@
                 <style>
                     @media print {
                         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    }
-
-                    @page { 
-                        size: A4; 
-                        margin: 25mm 15mm 25mm 15mm; /* Aumentado el margen superior a 25mm */
-                        @bottom-right {
-                            content: "Página " counter(page);
-                            font-family: 'Inter', sans-serif;
-                            font-size: 9pt;
-                            color: #64748b;
+                        @page {
+                            size: A4;
+                            /* Un margen seguro permite a los encabezados nativos del navegador imprimirse sin estorbar el contenido */
+                            margin: 20mm; 
                         }
                     }
                     
-                    body { ${textFont} color: #1a202c; line-height: 1.5; font-size: 10pt; background: #fdfbf7; margin: 0; padding: 0; }
+                    body { ${textFont} color: #1a202c; line-height: 1.5; font-size: 10pt; background: #ffffff; margin: 0; padding: 0; }
                     
+                    /* Contenedor limpio, sin bordes masivos que causen conflictos de salto de página */
                     .page-container {
-                        border: 3px solid #1e293b;
-                        padding: 30px 25px; /* Más padding interno para respirar */
-                        min-height: calc(100vh - 40px);
-                        position: relative;
-                        background: #fffcf8;
-                        outline: 1px solid #1e293b;
-                        outline-offset: -6px;
+                        padding: 0; 
+                        width: 100%;
+                        max-width: 100%;
+                        box-sizing: border-box;
                     }
                     
                     h1, h2, h3, .title-font, th { ${titleFont} color: #0f172a; }
                     
                     h1 { 
-                        font-size: 28pt; 
+                        font-size: 26pt; 
                         font-weight: 900; 
                         text-align: center; 
                         text-transform: uppercase; 
                         letter-spacing: 1px; 
-                        border-bottom: 3px double #1e293b; 
-                        padding-bottom: 10px; 
+                        border-top: 4px solid #1e293b; 
+                        border-bottom: 4px solid #1e293b; 
+                        padding: 15px 0; 
                         margin-top: 0; 
                         margin-bottom: 25px; 
                     }
                     
                     h2, h3 {
-                        display: inline-block !important;
-                        width: 100% !important;
+                        display: block !important;
                         break-after: avoid !important; 
                         page-break-after: avoid !important;
-                        -webkit-column-break-after: avoid !important;
                         box-sizing: border-box;
                     }
 
                     h2 { 
-                        font-size: 15pt; 
+                        font-size: 14pt; 
                         font-weight: 700; 
                         border-bottom: 2px solid #cbd5e1; 
-                        margin-top: 20px; 
-                        margin-bottom: 10px; 
+                        margin-top: 25px; 
+                        margin-bottom: 12px; 
                         padding-bottom: 4px; 
                         text-transform: uppercase;
                         letter-spacing: 0.5px;
                     }
                     
-                    h3 { font-size: 13pt; font-weight: bold; margin-top: 10px; margin-bottom: 6px; color: #1e293b; }
+                    h3 { font-size: 12pt; font-weight: bold; margin-top: 10px; margin-bottom: 6px; color: #1e293b; }
                     
                     p, div, ul { margin-bottom: 10px; }
                     ul { padding-left: 20px; margin-top: 5px;}
                     b, strong { font-weight: 700; color: #000; }
 
+                    /* Sistema de columnas mejorado */
                     .columns-wrapper { 
                         column-count: 2; 
-                        column-gap: 10mm; 
+                        column-gap: 12mm; 
                         display: block;
                         width: 100%;
                     }
                     
+                    /* Fundamental: usar block, no inline-block para evitar superposiciones y cortes en Chrome */
                     .avoid-break { 
                         break-inside: avoid !important; 
                         page-break-inside: avoid !important; 
-                        -webkit-column-break-inside: avoid !important;
-                        display: inline-block !important; 
+                        display: block !important; 
                         width: 100% !important;
-                        margin-bottom: 18px; 
-                        vertical-align: top;
+                        margin-bottom: 20px; 
                         box-sizing: border-box;
                     }
 
-                    .main-image { max-width: 100%; max-height: 300px; object-fit: cover; border: 2px solid #1e293b; padding: 4px; background: white; display: block; margin: 0 auto 20px auto; column-span: all; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
+                    /* Imágenes centradas y proporcionadas */
+                    .main-image { 
+                        max-width: 100%; 
+                        height: auto;
+                        max-height: 400px; 
+                        object-fit: contain; 
+                        border: 2px solid #1e293b; 
+                        padding: 4px; 
+                        background: white; 
+                        display: block; 
+                        margin: 0 auto 25px auto; 
+                        column-span: all; 
+                        box-shadow: 4px 4px 0px rgba(0,0,0,0.1); 
+                    }
                     
-                    .map-image-wrapper { column-span: all; margin-bottom: 25px; border: 2px solid #1e293b; padding: 10px; background: white; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
+                    .map-image-wrapper { 
+                        column-span: all; 
+                        margin-bottom: 25px; 
+                        border: 2px solid #1e293b; 
+                        padding: 10px; 
+                        background: white; 
+                        box-shadow: 4px 4px 0px rgba(0,0,0,0.1); 
+                        break-inside: avoid;
+                    }
                     .map-image { width: 100%; max-height: 450px; object-fit: contain; display: block; margin: 0 auto; }
-                    .map-title { margin-top: 0; border: none; text-align: center; font-size: 18pt; display: block; }
+                    .map-title { margin-top: 0; border: none; text-align: center; font-size: 16pt; display: block; }
                     
-                    /* FIX IMÁGENES DENTRO DE TEXTO: Centrado forzado absoluto global */
+                    /* FIX IMÁGENES DENTRO DE TEXTO: Centrado absoluto */
                     .rich-text-print img { 
                         max-width: 85% !important; 
                         height: auto !important; 
-                        border-radius: 4px !important; 
                         display: block !important; 
-                        margin: 25px auto !important; /* Centrado estricto L/R y margen generoso T/B */
+                        margin: 20px auto !important; 
                         border: 1px solid #cbd5e1 !important; 
+                        border-radius: 4px !important; 
                         padding: 4px !important; 
                         background: white !important;
                         box-shadow: 3px 3px 0px rgba(0,0,0,0.1) !important;
-                        page-break-inside: avoid !important;
                         break-inside: avoid !important;
                     }
                     
-                    /* FIX PÁRRAFOS Y LISTAS: Evitar que topen arriba en nuevas páginas */
                     .rich-text-print p, .rich-text-print ul, .rich-text-print h4 {
-                        display: inline-block !important; /* Evita roturas internas */
-                        width: 100% !important;
+                        display: block !important;
                         margin-top: 8px !important;
                         margin-bottom: 8px !important;
-                        padding-top: 4px !important; /* Distancia segura si cae a principio de página */
                     }
 
-                    .npc-image { width: 100% !important; max-width: 100% !important; max-height: 140px; object-fit: contain; border: 1px solid #cbd5e1; padding: 4px; margin: 0 auto 10px auto !important; background: #f8fafc; display: block !important; }
+                    .npc-image { 
+                        max-width: 90% !important; 
+                        height: auto !important; 
+                        max-height: 160px; 
+                        object-fit: contain; 
+                        border: 1px solid #cbd5e1; 
+                        padding: 4px; 
+                        margin: 0 auto 12px auto !important; 
+                        background: #f8fafc; 
+                        display: block !important; 
+                    }
 
                     table { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 5px; border: 2px solid #1e293b; font-size: 9.5pt; background: white;}
-                    th { background-color: #1e293b; color: white; padding: 6px; text-align: left; font-size: 11pt; border-right: 1px solid #334155; ${titleFont}}
+                    th { background-color: #1e293b; color: white; padding: 6px; text-align: left; font-size: 10.5pt; border-right: 1px solid #334155; ${titleFont}}
                     th:first-child { width: 35px; text-align: center; }
                     th:last-child { border-right: none; }
                     td { padding: 6px; vertical-align: top; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
@@ -1500,40 +1515,22 @@
                     .table-footer { font-size: 8.5pt; color: #64748b; margin-top: 6px; text-align: right; font-style: italic;}
 
                     .stat-block { border: 2px solid #1e293b; padding: 12px; background: #ffffff; box-shadow: 4px 4px 0px #cbd5e1; position: relative; box-sizing: border-box;}
-                    .stat-block h3 { margin-top: 0; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; font-size: 15pt;}
+                    .stat-block h3 { margin-top: 0; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; font-size: 14pt;}
                     
-                    .stat-line { background: #f1f5f9; padding: 5px 8px; border-left: 3px solid #10b981; font-size: 9pt; font-weight: bold; color: #0f172a; margin-bottom: 8px; display: flex; justify-content: space-between;}
+                    .stat-line { background: #f1f5f9; padding: 6px 8px; border-left: 3px solid #10b981; font-size: 9pt; font-weight: bold; color: #0f172a; margin-bottom: 8px; display: flex; justify-content: space-between; flex-wrap: wrap;}
                     
-                    .npc-field { font-size: 9.5pt; margin-bottom: 5px; }
+                    .npc-field { font-size: 9.5pt; margin-bottom: 6px; line-height: 1.4; }
                     .npc-field b { color: #0f172a; }
                     
-                    .magic-text { color: #047857; background: #ecfdf5; padding: 2px 4px; border-radius: 2px; display: inline-block; width: 100%; box-sizing: border-box; margin-top: 2px;}
-                    .secret-text { color: #475569; font-style: italic; background: #f8fafc; padding: 4px; border-left: 2px dashed #94a3b8; display: block; margin-top: 5px;}
+                    .magic-text { color: #047857; background: #ecfdf5; padding: 3px 6px; border-radius: 2px; display: block; margin-top: 6px; border-left: 2px solid #10b981;}
+                    .secret-text { color: #475569; font-style: italic; background: #f8fafc; padding: 6px; border-left: 2px dashed #94a3b8; display: block; margin-top: 6px;}
                     .danger-text { color: #b91c1c; background: #fef2f2; padding: 2px 4px; border-radius: 2px;}
                     .clue-text { color: #0369a1; background: #f0f9ff; padding: 2px 4px; border-radius: 2px;}
 
                     .faction-list { margin-bottom: 12px; padding-left: 0; list-style: none;}
-                    .faction-list li { margin-bottom: 6px; font-size: 10pt; background: #f8fafc; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 2px;}
+                    .faction-list li { margin-bottom: 6px; font-size: 10pt; background: #f8fafc; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 2px;}
                     .faction-list .check { font-family: Courier, monospace; font-size: 14pt; margin-right: 6px; color: #94a3b8; vertical-align: middle;}
                     .faction-list .bullet { font-size: 14pt; margin-right: 6px; color: #1e293b; vertical-align: middle;}
-
-                    /* Pie de página dinámico */
-                    .print-footer { 
-                        position: fixed; 
-                        bottom: -12mm; /* Posicionado fuera del marco principal */
-                        right: 0; 
-                        font-size: 9pt; 
-                        color: #64748b; 
-                        font-family: 'Inter', sans-serif; 
-                        width: 100%; 
-                        border-top: 1px solid #e2e8f0; 
-                        padding-top: 6px;
-                        display: flex;
-                        justify-content: space-between;
-                    }
-                    .print-footer .page-num::after {
-                        content: counter(page);
-                    }
                 </style>
             </head>
             <body>
@@ -1649,11 +1646,6 @@
 
             htmlContent += `
                     </div> <!-- Cierra columns-wrapper -->
-                    
-                    <div class="print-footer">
-                        <span>Mausritter / Aventura Hexágono ${hex.label}</span>
-                        <span class="page-num">Página </span>
-                    </div>
                 </div> <!-- Cierra page-container -->
             </body>
             </html>
